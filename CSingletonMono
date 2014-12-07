@@ -1,0 +1,64 @@
+using UnityEngine;
+using System.Collections;
+
+//	CSingletonMono.cs
+//	Author: Lu Zexi
+//	2014-12-07
+
+
+//Sigleton with Mono code
+public class CSingletonMono<T> : MonoBehaviour
+	where T : MonoBehaviour
+{
+	private static T m_sInstance;
+	public static T sInstance
+	{
+		get
+		{
+			if (m_sInstance == null)
+			{
+				m_sInstance = (T)FindObjectOfType (typeof(T));
+ 
+				if (m_sInstance == null)
+				{
+					GameObject obj = new GameObject(typeof(T).Name);
+					m_sInstance = obj.AddComponent<T>();
+				}
+			}
+ 
+			return m_sInstance;
+		}
+	}
+
+	void OnDestroy()
+	{
+		if( instance == this ){
+			instance = null;
+		}
+	}
+
+	protected virtual void Awake()
+	{
+		CheckInstance();
+	}
+	
+	protected bool CheckInstance()
+	{
+		if( this == I ){ return true;}
+		Destroy(this);
+		return false;
+	}
+
+	static public bool IsValid()
+	{
+		return ( instance != null ) ;
+	}
+
+	//clean the data in class
+	public void Destroy()
+	{
+		GameObject obj =  instance.gameObject;
+		DestroyImmediate(instance);
+		instance = obj.AddComponent<T>();
+	}
+}
