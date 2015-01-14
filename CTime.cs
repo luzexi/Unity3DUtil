@@ -1,4 +1,6 @@
 
+using System;
+
 //	CTime.cs
 //	Author: Lu Zexi
 //	2014-12-07
@@ -35,6 +37,6 @@ public class CTime
     public static long DateTimeToUNIXTime( DateTime dt )
     {
     	long timeL = (dt.Ticks - (new DateTime(1970, 1, 1, 8, 0, 0).Ticks)) / 10000000L;
-    	return timeL
+		return timeL;
     }
 }

@@ -28,37 +28,17 @@ public class CSingletonMono<T> : MonoBehaviour
  
 			return m_sInstance;
 		}
-	}
+	} 
 
 	void OnDestroy()
 	{
-		if( instance == this ){
-			instance = null;
+		if( m_sInstance == this ){
+			m_sInstance = default(T);
 		}
 	}
 
-	protected virtual void Awake()
+	public static bool IsValid()
 	{
-		CheckInstance();
-	}
-	
-	protected bool CheckInstance()
-	{
-		if( this == I ){ return true;}
-		Destroy(this);
-		return false;
-	}
-
-	static public bool IsValid()
-	{
-		return ( instance != null ) ;
-	}
-
-	//clean the data in class
-	public void Destroy()
-	{
-		GameObject obj =  instance.gameObject;
-		DestroyImmediate(instance);
-		instance = obj.AddComponent<T>();
+		return ( sInstance != null ) ;
 	}
 }

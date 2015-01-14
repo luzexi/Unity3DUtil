@@ -1,4 +1,5 @@
 
+using UnityEngine;
 
 //	CRandom.cs
 //	Author: Lu Zexi

@@ -24,8 +24,8 @@ public class CSingleton<T>
 	}
 
 	//destroy instance
-	public void Destroy();
+	public void Destroy()
 	{
-		m_sInstance = null;
+		m_sInstance = default(T);
 	}
 }
