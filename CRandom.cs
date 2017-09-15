@@ -49,13 +49,13 @@ public class CRandom
         for (int i = 0; i < num; i++)
         {
             selectPos[i] = -1;
-            vecRandom[i] = RANDOM_ONE();
+            vecRandom[i] = UnityEngine.Random.Range(0,1f);
         }
 
         for (int i = 0; i < num; i++)
         {
             float sumPos = 0;
-            for (int j = RANDOM(0,typeNum) , k = 0; k < perLst.Length; k++, j++)
+            for (int j = (int)UnityEngine.Random.Range(0,typeNum) , k = 0; k < perLst.Length; k++, j++)
             {
                 sumPos += perLst[j % typeNum];
                 //Debug.Log("sum + " + sumPos + " -- " + perLst[j % typeNum] + " -- " + vecRandom[i]);
@@ -69,63 +69,5 @@ public class CRandom
         }
 
         return selectPos;
-    }
-
-    /// <summary>
-    /// 随机圆内点
-    /// </summary>
-    /// <returns></returns>
-    public static Vector2 RANDOM_IN_CIRCLE()
-    {
-        return UnityEngine.Random.insideUnitCircle;
-    }
-
-    /// <summary>
-    /// 随机球内点
-    /// </summary>
-    /// <returns></returns>
-    public static Vector3 RANDOM_IN_SPHERE()
-    {
-        return UnityEngine.Random.insideUnitSphere;
-    }
-
-    /// <summary>
-    /// 随机球上点
-    /// </summary>
-    /// <returns></returns>
-    public static Vector3 RANDOM_ON_SPHERE()
-    {
-        return UnityEngine.Random.onUnitSphere;
-    }
-
-    /// <summary>
-    /// 随机0-1浮点数
-    /// </summary>
-    /// <returns></returns>
-    public static float RANDOM_ONE()
-    {
-        return RANDOM(0f, 1f);
-    }
-
-    /// <summary>
-    /// 随机范围内浮点数
-    /// </summary>
-    /// <param name="min"></param>
-    /// <param name="max"></param>
-    /// <returns></returns>
-    public static float RANDOM(float min, float max)
-    {
-        return UnityEngine.Random.Range(min, max);
-    }
-
-    /// <summary>
-    /// 随机范围内整数
-    /// </summary>
-    /// <param name="min"></param>
-    /// <param name="max"></param>
-    /// <returns></returns>
-    public static int RANDOM(int min, int max)
-    {
-        return UnityEngine.Random.Range(min, max);
     }
 }
