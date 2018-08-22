@@ -17,6 +17,8 @@ CMath.cs : 数学函数
 
 CPropertyValue : 多值的叠加
 
+PrefabLightmapData : 烘培模型动态加载
+
 CRandom.cs : 随机工具
 
 CSingleton.cs : 单例
