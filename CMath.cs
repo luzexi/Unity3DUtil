@@ -13,33 +13,6 @@ using System.Collections.Generic;
 /// </summary>
 public class CMath
 {
-    //fit the rect from now width and height to target width and height
-    public static Rect FitRect(Rect rect, int stSWidth, int stSHeight, int now_width, int now_height)
-    {
-        float sX = now_width *1f/ stSWidth;
-        float sY = now_height *1f/ stSHeight;
-
-        float resScale = 0;
-
-        if (sX > sY)
-        {
-            resScale = sY;
-        }
-        else
-        {
-            resScale = sX;
-        }
-
-        float nowWidth = stSWidth * resScale;
-        float nowHeight = stSHeight * resScale;
-
-        rect.x = (int)(rect.x * resScale + (Screen.width - nowWidth) * 0.5f);
-        rect.y = (int)(rect.y * resScale + (Screen.height - nowHeight) * 0.5f);
-        rect.width = rect.width * resScale;
-        rect.height = rect.height * resScale;
-
-        return rect;
-    }
 
     /// <summary>
     /// 直线

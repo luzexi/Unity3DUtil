@@ -1,14 +1,9 @@
 
 using System;
 
-//	CTime.cs
-//	Author: Lu Zexi
-//	2014-12-07
 
-
-
-//time util
-public class CTime
+//time convert
+public class TimeConvert
 {
 	//convert from unix time to string date time
     public static string UNIXTimeToDateTimeString(long time)
