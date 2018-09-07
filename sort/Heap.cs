@@ -80,7 +80,7 @@ public class Heap<T> where T : IComparable<T>
     internal static int ParentIndexOf(int ix)
     {
         if (ix == 0)
-            throw new InvalidOperationException(Resources.Errors.ParentOfRootDoesntExist);
+            throw new Exception("Resources.Errors.ParentOfRootDoesntExist");
         else
         {
             return (int)Math.Floor((double)(ix - 1) / 2);
@@ -187,7 +187,7 @@ public class Heap<T> where T : IComparable<T>
         int lastIx = this.List.Count - 1;
         T result = default(T);
         if (lastIx < 0)
-            throw new InvalidOperationException(Resources.Errors.CannotRemoveFromEmptyHeap);
+            throw new Exception("Resources.Errors.CannotRemoveFromEmptyHeap");
         else
         {
             result = this.List[0];
@@ -242,7 +242,7 @@ public class Heap<T> where T : IComparable<T>
         if (this.List.Count > 0)
             return this.List[0];
         else
-            throw new InvalidOperationException(Resources.Errors.PeekEmptyTree);
+            throw new Exception("Resources.Errors.PeekEmptyTree");
     }
 
     #endregion
