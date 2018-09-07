@@ -28,7 +28,15 @@ public class CSingletonMono<T> : MonoBehaviour
  
 			return m_sInstance;
 		}
-	} 
+	}
+
+	void Awake()
+	{
+		if(m_sInstance == null)
+		{
+			m_sInstance = this;
+		}
+	}
 
 	void OnDestroy()
 	{
