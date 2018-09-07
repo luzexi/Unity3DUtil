@@ -34,7 +34,7 @@ public class CSingletonMono<T> : MonoBehaviour
 	{
 		if(m_sInstance == null)
 		{
-			m_sInstance = this;
+			m_sInstance = this as T;
 		}
 	}
 
