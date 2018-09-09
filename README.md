@@ -1,7 +1,7 @@
 Unity3D Game Develop Util
 ===========
 
-Unity3D 工具库
+Unity3D Util library
 
 batchRender : 实时动态合并模型Mesh
 
@@ -19,7 +19,7 @@ CFile.cs : 文件操作
 
 CMath.cs : 暂时是一些数学曲线
 
-CPropertyValue : 多个浮点数叠加，为了保持精确度，多种浮点数叠加与消除用链表形式代替
+CPropertyValue : 解决精度问题，未完成
 
 CRandom.cs : 在做老虎机游戏时写的赌博概率随机
 
@@ -36,6 +36,8 @@ Polar.cs : 球面曲线运动轨迹
 PrefabLightmapData : 烘培模型动态加载
 
 SecureNumber.cs : 数字在内存中加密
+
+SoundEffect.cs : 声音组件，播放音效，播放背景音乐。
 
 TextureTileAnimationWholeMesh.cs : 利用图集排列的贴图精灵动画
 

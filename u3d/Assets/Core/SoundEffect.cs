@@ -12,9 +12,16 @@ public class SoundEffect : MonoBehaviour
 	// private int updateCount = 0;
 	// private const int updateInterval = 30;
 	private float mBgmVol = 0;
+	public float BgmVol
+	{
+		get
+		{
+			return mBgmVol;
+		}
+	}
 	// private int trackIndex = 0;
 	// private float muteTime = 30;
-	private float mMaxVolume = 100;
+	private const float MAX_VOLUME = 1;
 	private const float FADE_SPEED = 0.3f;
 	private float mCurFadeSpeed = 0.3f;
 	private bool mIsFading = false;
@@ -60,12 +67,28 @@ public class SoundEffect : MonoBehaviour
 		if (mIsFading)
 		{
 			mBgmVol += Time.deltaTime * mCurFadeSpeed;
-			if (mBgmVol > mMaxVolume)
+
+			if(mCurFadeSpeed > 0)
 			{
-				mBgmVol = mMaxVolume;
-				mIsFading = false;
+				if (mBgmVol > MAX_VOLUME)
+				{
+					mBgmVol = MAX_VOLUME;
+					mIsFading = false;
+				}
+			}
+			else
+			{
+				if (mBgmVol < 0)
+				{
+					mBgmVol = 0;
+					mIsFading = false;
+				}
 			}
             mBgmAudioSource.volume = mBgmVol;
+            if(mBgmVol <= 0)
+            {
+            	StopBgm();
+            }
 		}
 		else
 		{
@@ -130,7 +153,7 @@ public class SoundEffect : MonoBehaviour
 		FadeIn(clip);
 	}
 
-	public void PlayBgmNext(string _filename)
+	public void PlayBgmFadeOutIn(string _filename)
 	{
 		AudioClip clip;
 
@@ -140,6 +163,19 @@ public class SoundEffect : MonoBehaviour
 			mBgms.Add(_filename,clip);
 		}
 		FadeOutIn(clip);
+	}
+
+	public void ClearBgm()
+	{
+		mBgms.Clear();
+	}
+
+	public void StopBgm()
+	{
+		if(mBgmAudioSource != null)
+		{
+			mBgmAudioSource.Stop();
+		}
 	}
 
 	public void FadeIn(AudioClip _clip)

@@ -1,2 +1,11 @@
 .DS_Store
-*.meta
+u3d/Library
+u3d/Temp
+u3d/obj
+u3d/*.pidb
+u3d/*.unityproj
+u3d/*.csproj
+u3d/*.sln
+u3d/*.userprefs
+u3d/Assets/StreamingAssets/build_info.txt*
+*.o
