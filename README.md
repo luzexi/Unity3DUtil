@@ -3,6 +3,8 @@ Unity3D Game Develop Util
 
 Unity3D Util library
 
+3D-InputControlAndCameraControl: 3D输入事件构建，与摄像头拖动，渲染，缩放
+
 batchRender : 实时动态合并模型Mesh
 
 ObjectPool : 对象池
