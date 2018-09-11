@@ -299,7 +299,7 @@ public class Input3DController : MonoBehaviour
 					currentPosition_touch = downPosition_touch;
 					isDown_touch = true;
 					isPressed_touch = false;
-					if(ReposHandlerX && ReposHandlerX.ReposNow){ReposHandlerX.Btn_ReposBuilding_release();}
+					// if(ReposHandlerX && ReposHandlerX.ReposNow){ReposHandlerX.Btn_ReposBuilding_release();}
 					//PandaUI.Instance.allowUserInput = false;
 				}
 				
@@ -324,7 +324,7 @@ public class Input3DController : MonoBehaviour
 					isReleased_touch = true;
 					isPressed_touch = false;
 					releasePosition_touch = Input.GetTouch(0).position;
-					if(ReposHandlerX && ReposHandlerX.ReposNow){ReposHandlerX.Btn_ReposBuilding_release();}
+					// if(ReposHandlerX && ReposHandlerX.ReposNow){ReposHandlerX.Btn_ReposBuilding_release();}
 				}
 			}
 		}
@@ -456,7 +456,7 @@ public class Input3DController : MonoBehaviour
 										sameSide = true;
 										
 										//caculate angels by screen center point
-										Vector3 midlePoint = new Vector3(ScreenWrapper.width/2, ScreenWrapper.height/2, currentPosition_touch.z);
+										Vector3 midlePoint = new Vector3(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, currentPosition_touch.z);
 										
 										float angleChange_1 = SignAngle(currentPosition_touch - midlePoint, newPos1 - midlePoint );								
 										float angleChange_2 = SignAngle(currentPosition2_touch - midlePoint, newPos2 - midlePoint );
@@ -668,7 +668,7 @@ public class Input3DController : MonoBehaviour
 								{
 
 									touch3FingerDeltaX = Input.GetTouch(0).position.x - currentPosition_touch.x;
-									if (Input.GetTouch(0).position.y > ScreenWrapper.height /2 )
+									if (Input.GetTouch(0).position.y > SCREEN_HEIGHT /2 )
 									{
 										touch3FingerDeltaX *= (-1);
 									}
@@ -1022,7 +1022,7 @@ public class Input3DController : MonoBehaviour
 
 				if (mCameraState == CAMERA_STATE.eAngle)
 				{
-					bCamera.Rotate(0, (touch3FingerDeltaY / ScreenWrapper.height),50);
+					bCamera.Rotate(0, (touch3FingerDeltaY / SCREEN_HEIGHT),50);
 					bCamera.Rotate(touch3FingerDeltaX * 0.3f, false);
 				}
 				else if (mCameraState == CAMERA_STATE.eRotating)
