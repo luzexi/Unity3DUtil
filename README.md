@@ -1,6 +1,10 @@
 Unity3D Game Develop Util
 ===========
 
+### Welcome to my blog : http://www.luzexi.com 
+
+### Use Unity2018 version
+
 Unity3D Util library
 
 3D-InputControlAndCameraControl: 3D输入事件构建，与摄像头拖动，渲染，缩放
@@ -50,5 +54,3 @@ TextureTileAnimationWholeMesh.cs : 利用图集排列的贴图精灵动画
 TimeConvert.cs : 时间转换
 
 Utils.cs : 常用零散的方法
-
-Welcome to my blog : http://www.luzexi.com 
