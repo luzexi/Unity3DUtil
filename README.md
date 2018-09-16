@@ -12,8 +12,12 @@ ObjectPool : 对象池
 pathFinder : A星寻路算法
 
 sort : 排序算法
+
+		DictionaryStr.cs : string为Key的字典数据结构，用快排构建
+
+		DictionaryInt.cs : Int为Key的字典数据结构，用快排构建
 		
-		CQuickSort.cs : 快排 + 二分查找
+		CQuickSort.cs : 快排 + 二分查找 + 查找插入点
 
 		Heap.cs : 二叉堆，最小和最大堆都可。适用于搭建型数据结构
 

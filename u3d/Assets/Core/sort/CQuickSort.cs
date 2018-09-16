@@ -22,6 +22,23 @@ public class CQuickSort
 	  return -1;
 	}
 
+	// base on sort sequence find a object by binary sort
+	// if v is the biggest one, will return the count of list
+	public static int SearchInsert<T>(List<T> A,T v, CompareFunction<T> _compareFunction)
+	{
+	  int x,y,m;
+	  x = 0;
+	  y = A.Count;
+	  while(x < y)
+	  {
+	    m = x+(y-x)/2;
+	    if(_compareFunction(A[m],v) == 0) return m;
+	    else if(_compareFunction(A[m], v) > 0) y = m;
+	    else x = m+1;
+	  }
+	  return y;
+	}
+
 	// quick one, make it in 3 parts , left one is smaller , middle one is equal , right one is bigger.
 	public static void Sort<T>(List<T> arr, int low, int high, CompareFunction<T> _compareFunction )
 	{
@@ -112,6 +129,52 @@ public class CQuickSort
 		int _index = -1;
 		_index = CQuickSort.Search<int>(arr, 9, test_compare_function);
 
+		Debug.LogError("_index " + _index);
+	}
+
+	public static void test_search_insert()
+	{
+		List<int> arr = new List<int>(10);
+		arr.Add(1);
+		arr.Add(2);
+		arr.Add(5);
+		arr.Add(6);
+		arr.Add(7);
+		arr.Add(8);
+		arr.Add(9);
+
+		string out1 = "";
+		for(int i = 0 ; i<arr.Count ; i++)
+		{
+			out1 += " " + arr[i].ToString();
+		}
+		Debug.LogError(out1);
+
+		int _index = -1;
+
+		int search_insert_num = 0;
+		Debug.LogError("SearchInsert " + search_insert_num);
+		_index = CQuickSort.SearchInsert<int>(arr, search_insert_num, test_compare_function);
+		Debug.LogError("_index " + _index);
+
+		search_insert_num = 3;
+		Debug.LogError("SearchInsert " + search_insert_num);
+		_index = CQuickSort.SearchInsert<int>(arr, search_insert_num, test_compare_function);
+		Debug.LogError("_index " + _index);
+
+		search_insert_num = 10;
+		Debug.LogError("SearchInsert " + search_insert_num);
+		_index = CQuickSort.SearchInsert<int>(arr, search_insert_num, test_compare_function);
+		Debug.LogError("_index " + _index);
+
+		search_insert_num = 9;
+		Debug.LogError("SearchInsert " + search_insert_num);
+		_index = CQuickSort.SearchInsert<int>(arr, search_insert_num, test_compare_function);
+		Debug.LogError("_index " + _index);
+
+		search_insert_num = 7;
+		Debug.LogError("SearchInsert " + search_insert_num);
+		_index = CQuickSort.SearchInsert<int>(arr, search_insert_num, test_compare_function);
 		Debug.LogError("_index " + _index);
 	}
 
