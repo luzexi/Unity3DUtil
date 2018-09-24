@@ -3,25 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-
-[RequireComponent(typeof(PoolObject))]
-public class PoolObjectDestroyAuto : MonoBehaviour
+public class GameObjectPoolAutoDestroy : MonoBehaviour
 {
 	public float Destroy_Time = 1;
-	private PoolObject mPoolObj;
     private bool mStart = false;
     private float mStartTime = 0;
-
-	void Start()
-    {
-    	mPoolObj = GetComponent<PoolObject>();
-    }
 
     void OnEnable()
     {
         mStartTime = Time.time;
         mStart = true;
-    	// StartCoroutine(StartDestroy());
     }
 
     void Update()
@@ -32,15 +23,8 @@ public class PoolObjectDestroyAuto : MonoBehaviour
         if(difTime > Destroy_Time)
         {
             mStart = false;
-            ObjectPoolManager.instance.DestroyObj(mPoolObj);
+            GameObjectPool.Release(this.gameObject);
         }
     }
-
-
-    // IEnumerator StartDestroy()
-    // {
-    //     yield return new WaitForSeconds(Destroy_Time);
-    //     ObjectPoolManager.instance.DestroyObj(mPoolObj);
-    // }
 }
 

@@ -27,7 +27,7 @@ sort : 排序算法
 
 CFile.cs : 文件操作
 
-CMath.cs : 暂时是一些数学曲线
+CMathCurve.cs : 数学曲线
 
 CPropertyValue : 解决精度问题，未完成
 
@@ -40,6 +40,8 @@ CSingletonMono.cs : Mono单例
 DebugWrap.cs : Debug封装
 
 MeshCreator.cs : 程序面片生成工具
+
+MiniJSON.cs : 常用Json解析类
 
 Polar.cs : 球面曲线运动轨迹
 

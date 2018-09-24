@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 
 //  2013-11-26
-//  CMath.cs
+//  CMathCurve.cs
 //  Lu Zexi
 //  数学工具
 
 
 /// <summary>
-/// 数据工具类
+/// 数学曲线类
 /// </summary>
-public class CMath
+public class CMathCurve
 {
 
     /// <summary>
@@ -388,12 +388,12 @@ public class CMath
         if (rate1 > 0.7f) //下落
         {
             rate1 = (rate1-0.7f)/1.3f;
-            rate1 = CMath.BounceOut(rate1, 0, 1f, 1f);
+            rate1 = BounceOut(rate1, 0, 1f, 1f);
             y = Mathf.Lerp(heigh + start.y , end.y , rate1);
         }
         else //上升
         {
-            rate1 = CMath.CubicOut(rate1, 0, 1f, 1f);
+            rate1 = CubicOut(rate1, 0, 1f, 1f);
             y = Mathf.Lerp(start.y, start.y + heigh, rate1);
         }
         pos.y = y;
