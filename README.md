@@ -45,6 +45,8 @@ CSingletonMono.cs : Mono单例
 
 DebugWrap.cs : Debug封装
 
+GameStateMachine.cs : 状态机封装
+
 MiniJSON.cs : 常用Json解析类
 
 Polar.cs : 球面曲线运动轨迹

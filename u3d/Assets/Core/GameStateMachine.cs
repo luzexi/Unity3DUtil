@@ -173,12 +173,9 @@ public class GameStateMachine<T> where T : struct
         m_curState.EnterState();
     }
 
-    public bool IsInState(T checkStateName)
+    public T GetCurStateName()
     {
-        if (!m_stateList.ContainsKey(checkStateName))
-            return false;
-
-        return m_curState == m_stateList[checkStateName];
+        return m_curState.m_stateName;
     }
 
     public bool IsInState(GameState checkState)
