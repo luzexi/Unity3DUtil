@@ -47,6 +47,10 @@ DebugWrap.cs : Debug封装
 
 GameStateMachine.cs : 状态机封装
 
+GMath.cs : Graphic math 图形学计算
+
+LineMesh.cs : 画线工具
+
 MiniJSON.cs : 常用Json解析类
 
 Polar.cs : 球面曲线运动轨迹
@@ -61,4 +65,14 @@ TextureTileAnimationWholeMesh.cs : 利用图集排列的贴图精灵动画
 
 TimeConvert.cs : 时间转换
 
-Utils.cs : 常用零散的方法
+MixUtils.cs : 常用零散的方法
+
+		getDeviceUniqueId()，获取设备唯一ID
+
+		GetAndroidContext()，获取安卓当前运行窗口
+
+		GetSavePath()，获取有写入权限的文件夹地址
+
+		GetString()，通过二进制获取字符串
+
+		GetMd5Hash()，MD5某个字符串或二进制数据
