@@ -30,7 +30,7 @@ public class CSingletonMono<T> : MonoBehaviour
 		}
 	}
 
-	protected virtual void Awake()
+	public virtual void Awake()
 	{
 		if(m_sInstance == null)
 		{
@@ -38,7 +38,7 @@ public class CSingletonMono<T> : MonoBehaviour
 		}
 	}
 
-	protected virtual void OnDestroy()
+	public virtual void OnDestroy()
 	{
 		if( m_sInstance == this ){
 			m_sInstance = default(T);

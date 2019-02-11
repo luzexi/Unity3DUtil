@@ -10,16 +10,16 @@ public class GMath {
         ON_LINE = 0,
         LEFT_SIDE = 1,
         RIGHT_SIDE = 2,
-        };
+    };
 
-        private const float EPSILON = 1e-005f; //最小常量
+    private const float EPSILON = 1e-005f; //最小常量
 
-        private static Vector2 _TempConvexFirst; //temp point
+    private static Vector2 _TempConvexFirst; //temp point
 
-        ////////////////////////////////
+    ////////////////////////////////
 
-        // check line cross
-        public static bool CheckLineCross (Vector2 sp1, Vector2 ep1, Vector2 sp2, Vector2 ep2) {
+    // check line cross
+    public static bool CheckLineCross (Vector2 sp1, Vector2 ep1, Vector2 sp2, Vector2 ep2) {
         if (Math.Max (sp1.x, ep1.x) < Math.Min (sp2.x, ep2.x)) {
         return false;
         }
@@ -43,7 +43,7 @@ public class GMath {
         return false;
     }
 
-    static float LineCrossProduct (Vector2 p1, Vector2 p2) {
+    public static float LineCrossProduct (Vector2 p1, Vector2 p2) {
         return (p1.x * p2.y - p1.y * p2.x);
     }
 
@@ -68,7 +68,12 @@ public class GMath {
     ///////////////////////////////
 
     // check rect collide or cross
-    static public bool IsRectCollide (Vector2[] rect1, Vector2[] rect2) {
+    static public bool IsRectCollide(Vector2[] rect1,Vector2[] rect2)
+    {
+        return IsRectCollideSAT(rect1,rect2) && IsRectCollideSAT(rect2,rect1);
+    }
+
+    static private bool IsRectCollideSAT (Vector2[] rect1, Vector2[] rect2) {
         // Debug.Assert (rect1.Length == 4, "rect1's point num is wrong");
         // Debug.Assert (rect2.Length == 4, "rect2's point num is wrong");
 
@@ -332,20 +337,37 @@ public class GMath {
         return Mathf.Abs (vec1.x - vec2.x) + Mathf.Abs (vec1.y - vec2.y);
     }
 
-    //计算交点
+    //计算交点,需要有误差允许
     public static bool Intersection(Vector2 a, Vector2 b, Vector2 c, Vector2 d,out Vector2 result) {
+        float epsilon = 0.01f;
+
         // 三角形abc 面积的2倍  
         var area_abc = (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x);
-        if(area_abc == 0)
+        if(Mathf.Abs(area_abc) <= epsilon)  //c在ab上，允许有误差
         {
             result = c;
             return true;
         }
         // 三角形abd 面积的2倍  
         var area_abd = (a.x - d.x) * (b.y - d.y) - (a.y - d.y) * (b.x - d.x);
-        if(area_abd == 0)
+        if(Mathf.Abs(area_abd) <= epsilon)  //d在ab上，允许有误差
         {
             result = d;
+            return true;
+        }
+
+        // 三角形cda 面积的2倍  
+        var area_cda = (c.x - a.x) * (d.y - a.y) - (c.y - a.y) * (d.x - a.x);
+        if(Mathf.Abs(area_cda) <= epsilon)   //a在cd上，允许有误差
+        {
+            result = a;
+            return true;
+        }
+        // 三角形cdb 面积的2倍  
+        var area_cdb = area_cda + area_abc - area_abd;
+        if(Mathf.Abs(area_cdb) <= epsilon)    //b在cd上，允许有误差
+        {
+            result = b;
             return true;
         }
 
@@ -354,20 +376,6 @@ public class GMath {
         {
             result = Vector2.zero;
             return false;
-        }
-        // 三角形cda 面积的2倍  
-        var area_cda = (c.x - a.x) * (d.y - a.y) - (c.y - a.y) * (d.x - a.x);
-        if(area_cda == 0)
-        {
-            result = a;
-            return true;
-        }
-        // 三角形cdb 面积的2倍  
-        var area_cdb = area_cda + area_abc - area_abd;
-        if(area_cdb == 0)
-        {
-            result = b;
-            return true;
         }
 
         if (area_cda * area_cdb > 0) 
@@ -384,5 +392,182 @@ public class GMath {
         return true;
     }
 
+    //获取point点到线段上最近的点
+    public static Vector2 GetClosestPointInLine(Vector2 startPos,Vector2 endPos,Vector2 point)
+    {
+        Vector2 line = endPos - startPos;
+        Vector2 edge = point - startPos;
+
+        float d = line.x*line.x + line.y*line.y;    // qp线段长度的平方
+        float t = Vector2.Dot(edge,line);
+        Vector2 intersection;
+        if (t < 0 || d <= 0)
+        {
+            t = 0;     // 最短距离即为 pt点 和 start点之间的距离。
+            intersection = startPos;
+        }
+        else if (t >= d)
+        {
+            t = 1;     // 当t（r）> 1时，最短距离即为 pt点 和 q点（B点和P点）之间的距离。
+            intersection = endPos;
+        }
+        else
+        {
+            float scale = t/d;
+            intersection = (1-scale)*startPos + scale * endPos;
+        }
+        return intersection;
+    }
+
+    // 返回点到线段最短距离的平方
+    public static float DistancePointToLine(Vector2 startPos,Vector2 endPos,Vector2 point)
+    {
+        Vector2 line = endPos - startPos;
+        Vector2 edge = point - startPos;
+
+        float d = line.x*line.x + line.y*line.y;    // qp线段长度的平方
+        float t = Vector2.Dot(edge,line);
+        Vector2 dis;
+        if (t < 0 || d <= 0)
+        {
+            t = 0;     // 最短距离即为 pt点 和 start点之间的距离。
+            dis = startPos;
+        }
+        else if (t >= d)
+        {
+            t = 1;     // 当t（r）> 1时，最短距离即为 pt点 和 q点（B点和P点）之间的距离。
+            dis = endPos;
+        }
+        else
+        {
+            float scale = t/d;
+            dis = (1-scale)*startPos + scale * endPos;
+        }
+        dis = dis - point;
+        //长度平方
+        return dis.sqrMagnitude;
+    }
+
+    // //找最优的造路路径
+    // //现在已知存在的问题：
+    // //   1. 从次短边穿过的路无效，原因是根本没判断
+    // //   2. 生成两段直线后，靠近end的直线递归了，前一段没有，导致前一段可能穿过其他建筑
+    // //   3. 每段之间的连接点有问题，需要特殊处理
+    // public static void GetCanSitRoute(Vector2 _start,Vector2 _end,List<Vector2[]> buildingList, ref int index,ref List<Vector2> route)
+    // {
+    //     bool isCross;
+    //     Vector2 newStart = Vector2.zero;
+    //     Vector2[] rect;
+    //     Debug.Log("GetCanSitRoute:index:"+index);
+    //     for(int i = index;i<buildingList.Count;++i)
+    //     {
+    //         isCross = false;
+    //         rect = buildingList[i];
+    //         int closest1 = 0;
+    //         int closest2 = 0;
+    //         float minDis1 = -1f;
+    //         float minDis2 = -1f;
+    //         for(int v=0;v<4;++v)
+    //         {
+    //             float dis = Vector2.Distance(rect[v],_start);
+    //             if(minDis1 == -1)
+    //             {
+    //                 minDis1 = dis;
+    //                 closest1 = v;
+    //             }
+    //             else if(dis < minDis1)
+    //             {
+    //                 minDis2 = minDis1;
+    //                 closest2 = closest1;
+    //                 minDis1 = dis;
+    //                 closest1 = v;
+    //             }
+    //             else if(minDis2 == -1 || dis<minDis2)
+    //             {
+    //                 minDis2 = dis;
+    //                 closest2 = v;
+    //             }
+    //         }
+    //         if(GMath.CheckLineCross(_start,_end,rect[closest1],rect[closest2]))
+    //         {
+    //             isCross = true;
+    //             float project_left = Vector2.Dot(rect[closest1]-_start,_end-_start);
+    //             float project_right = Vector2.Dot(rect[closest2]-_start,_end-_start);
+
+    //             int newStartIndex = 0;
+    //             int newStart_left = 0;
+    //             int newStart_right = 0;
+    //             float ratio_left = 0.3f;
+    //             float ratio_right = 0.2f;
+
+    //             if(project_left>project_right)
+    //             {
+    //                 newStartIndex = closest1;
+    //                 newStart_left = closest2;
+    //                 newStart_right = (2*closest1 - closest2+4)%4;
+    //             }
+    //             else
+    //             {
+    //                 newStartIndex = closest2;
+    //                 newStart_left = closest1;
+    //                 newStart_right = (2*closest2 - closest1+4)%4;
+    //             }
+    //             Debug.Log("BuildingManager:236:"+newStart_right);
+    //             newStart = rect[newStartIndex] + (rect[newStartIndex] - rect[newStart_left]).normalized*ratio_left + (rect[newStartIndex] - rect[newStart_right]).normalized*ratio_right;
+    //         }
+
+    //         if(isCross)
+    //         {
+    //             route.Add(newStart);
+    //             //TODO: 选一个最近的点 Veritces[?]
+    //             index = i;
+    //             GetCanSitRoute(newStart,_end,buildingList,ref index,ref route);
+    //             break;
+    //         }
+    //     }
+    // }
+
+
+    //3D -> 2D
+    public static Vector2 PauseVec3ToVec2(Vector3 vec)
+    {
+        return new Vector2(vec.x,vec.z);
+    }
+
+    //2D -> 3D
+    public static Vector3 PauseVec2ToVec3(Vector2 vec)
+    {
+        return new Vector3(vec.x,0,vec.y);
+    }
+
+    // public static Vector3[] PausePathFromVec2ToVec3(List<Vector2> path)
+    // {
+    //     if(path == null)
+    //         return null;
+
+    //     Vector3[] result =new Vector3[path.Count];
+    //     RaycastHit hitInfo;
+    //     for(int i=0;i<path.Count;++i)
+    //     {
+    //         Vector2 pos = path[i];
+    //         //计算Y轴高度
+    //         Vector3 origin = new Vector3(pos.x,Consts.MAX_TERRAIN_HEIGHT,pos.y);
+    //         Physics.Raycast (origin, Vector3.down, out hitInfo, Mathf.Infinity, 1 << Consts.TERRAIN_LAYER);
+    //         result[i] = new Vector3(pos.x,hitInfo.point.y,pos.y);
+    //     }
+    //     return result;
+    // }
+
+    // public static float CalculateTime(Vector3[] _path,float _speed)
+    // {
+    //     float length = 0f;
+    //     if(_path == null || _path.Length == 0 || _speed == 0f)
+    //         return 0f;
+    //     for(int i=1;i<_path.Length;++i)
+    //     {
+    //         length +=Vector2.Distance(_path[i-1].xz(),_path[i].xz());
+    //     }
+    //     return length/_speed;
+    // }
 
 }

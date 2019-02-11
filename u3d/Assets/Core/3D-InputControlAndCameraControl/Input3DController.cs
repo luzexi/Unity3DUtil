@@ -2,16 +2,23 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Input3DController : MonoBehaviour
+public class Input3DController : CSingletonMono<Input3DController>
 {
-	private const int MOVE_LAYER = 0;
+	// private const int MOVE_LAYER = 9;
 	private const int SCREEN_WIDTH = 960;
 	private const int SCREEN_HEIGHT = 640;
 	public Camera mCurCamera;
+	// public CameraControl bCamera;
 	public CameraControl bCamera;
 	public float iPhoneZoomDeltaValue = 10.0f;
 
 	private bool bCameraEnable = true;
+	private bool bFocusOnUI = false;
+	public bool ForcsOnUI
+	{
+		get {return bFocusOnUI;}
+		set {bFocusOnUI = value;}
+	}
 		
 	private Vector3 downPosition = Vector3.zero;
 	private Vector3 releasePosition = Vector3.zero;
@@ -19,6 +26,7 @@ public class Input3DController : MonoBehaviour
 	
 	// private Vector3 originHitPoint;
 	private Vector3 downPositionInWorldSpace;
+	private Vector3 downPositionInScreen;
     // private Vector3 downPositionInWorldSpaceInMiniGame;
 	// private Vector3 upPositionInWorldSpace;
 	// private Vector3 upPositionInWorldSpaceInMiniGame;
@@ -68,12 +76,16 @@ public class Input3DController : MonoBehaviour
 		
 	private Vector3 downPosition2_mouse = Vector3.zero;
 	private Vector3 currentPosition2_mouse = Vector3.zero;
+	private Vector3 downPosition3_mouse = Vector3.zero;
+	private Vector3 currentPosition3_mouse = Vector3.zero;
 #endif
 	
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO
 	private Vector3 downPosition_touch = Vector3.zero;
 	private Vector3 releasePosition_touch = Vector3.zero;
 	private Vector3 currentPosition_touch = Vector3.zero;
+	private Vector3 detailPosition_touch = Vector3.zero;
+	private Vector3 prePosition_touch = Vector3.zero;
 	
 	private float deltaX_touch, deltaY_touch, deltaZ_touch;
 	private bool touchMoveAway_touch;
@@ -88,8 +100,11 @@ public class Input3DController : MonoBehaviour
 	private float touch2FingerDeltaX_touch;
 	private float touch2FingerDeltaY_touch;
 		
+	private float touch2FingerSameDeltaY_touch;	
 	private Vector3 downPosition2_touch = Vector3.zero;
 	private Vector3 currentPosition2_touch = Vector3.zero;
+	private Vector3 detailPosition2_touch = Vector3.zero;
+	private Vector3 prePosition2_touch = Vector3.zero;
 	
 	private float oldDistance_touch = 0;
 	private float newDistance_touch = 0;
@@ -103,6 +118,7 @@ public class Input3DController : MonoBehaviour
 	private bool touch2TypeDecided = false;//whether touch2 type decided
 	private bool touch2Rotating = false;//whether touch2 rotate
 	private bool touch2Zooming = false;//whether touch2 zoomd
+	private bool touch2Angleing = false;//whether touch2 angle
 	//private Vector3 touch2RotateMidPoint = Vector3.zero;
 
 
@@ -148,27 +164,26 @@ public class Input3DController : MonoBehaviour
 
 	// Time
 	private float mDeltaTime = 0, mTimeAtLastFrame = 0;
+
+
+	private int mFrameNum = 0;
 	
 	// Use this for initialization
-	void Awake () 
+	public override void Awake ()
 	{
+		base.Awake();
 		MOVE_DELTA = SCREEN_WIDTH * 0.02f;
 	}
 
-	void OnDestroy()
-	{
-		//
-	}
-	
-	// Update is called once per frame
-	// all control in building part
-	// include:
-	//            camera control
-	//            building control
-	//            farmer control
-	//            if input is in UI state, prevent all controls from above
+    // Update is called once per frame
+    // all control in building part
+    // include:
+    //            camera control
+    //            building control
+    //            farmer control
+    //            if input is in UI state, prevent all controls from above
 
-	void Update () 
+    void Update () 
 	{
 		float _currTime = Time.realtimeSinceStartup;
 		mDeltaTime = _currTime - mTimeAtLastFrame;
@@ -197,6 +212,15 @@ public class Input3DController : MonoBehaviour
 		// zoom in/out
 		deltaY_mouse = Input.GetAxis("Mouse ScrollWheel");
 
+		if(Input.GetKeyDown(KeyCode.PageUp))
+		{
+			deltaY_mouse = -0.5f;
+		}
+		if(Input.GetKeyDown(KeyCode.PageDown))
+		{
+			deltaY_mouse = 0.5f;
+		}
+
 		if (Input.GetMouseButtonDown(0))
 		{
 			currentPosition_mouse = Input.mousePosition;
@@ -224,8 +248,8 @@ public class Input3DController : MonoBehaviour
 		else if (Input.GetMouseButtonUp(0))
 		{ 
 			isReleased_mouse = true;
-			releasePosition_mouse = Input.mousePosition; 
-		}
+			releasePosition_mouse = Input.mousePosition;
+        }
 		else if (Input.GetMouseButtonDown(1))
 		{ 
 			currentPosition2_mouse = Input.mousePosition;
@@ -241,11 +265,11 @@ public class Input3DController : MonoBehaviour
 			touch2FingerDeltaY_mouse = deltaMouse.y;
 			currentPosition2_mouse = Input.mousePosition;
 			
-			if (Mathf.Abs(downPosition2_mouse.x - currentPosition2_mouse.x) > MOVE_DELTA || 
-			    Mathf.Abs(downPosition2_mouse.y - currentPosition2_mouse.y) > MOVE_DELTA )
-			{
-				touchMoveAway2_mouse = true;
-			}
+			// if (Mathf.Abs(downPosition2_mouse.x - currentPosition2_mouse.x) > MOVE_DELTA || 
+			//     Mathf.Abs(downPosition2_mouse.y - currentPosition2_mouse.y) > MOVE_DELTA )
+			// {
+			// 	touchMoveAway2_mouse = true;
+			// }
 		}
 		else if (Input.GetMouseButtonUp(1))
 		{ 
@@ -254,7 +278,30 @@ public class Input3DController : MonoBehaviour
 				touch2FingerReleased_mouse = true;
 			}
 			touch2Finger_mouse = false;
+
+        }
+        else if (Input.GetMouseButtonDown(2))
+		{ 
+			currentPosition3_mouse = Input.mousePosition;
+			downPosition3_mouse = Input.mousePosition;
+			touchMoveAway2_mouse = false;
+			touch2Finger_mouse = true;
 		}
+		else if (Input.GetMouseButton(2))
+		{
+			Vector3 deltaMouse = Input.mousePosition - currentPosition3_mouse;
+			touch2FingerDeltaX_mouse = deltaMouse.x;
+			touch2FingerDeltaY_mouse = deltaMouse.y;
+			currentPosition3_mouse = Input.mousePosition;
+		}
+		else if (Input.GetMouseButtonUp(2))
+		{ 
+			if (!touchMoveAway2_mouse)
+			{
+				touch2FingerReleased_mouse = true;
+			}
+			touch2Finger_mouse = false;
+        }
 		else
 		{
 			currentPosition_mouse = Vector3.zero;
@@ -280,7 +327,7 @@ public class Input3DController : MonoBehaviour
 		touch2Finger = touch2Finger_mouse;
 #endif
 
-#if (UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO) && !UNITY_EDITOR
+#if (UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO) && !UNITY_EDITOR 
 		int fingerCount = Input.touchCount;
 		// camera move
 		if (fingerCount == 1)
@@ -296,7 +343,9 @@ public class Input3DController : MonoBehaviour
 					touchMoveAway_touch = false;
 					this.setTouchMoveAway(false);
 					downPosition_touch = Input.GetTouch(0).position;
+					prePosition_touch = Vector3.zero;
 					currentPosition_touch = downPosition_touch;
+					detailPosition_touch = Vector3.zero;
 					isDown_touch = true;
 					isPressed_touch = false;
 					// if(ReposHandlerX && ReposHandlerX.ReposNow){ReposHandlerX.Btn_ReposBuilding_release();}
@@ -307,7 +356,9 @@ public class Input3DController : MonoBehaviour
 				{
 					deltaX_touch = -Input.GetTouch(0).position.x + currentPosition_touch.x;
 					deltaZ_touch = -Input.GetTouch(0).position.y + currentPosition_touch.y;
+					prePosition_touch = currentPosition_touch;
 					currentPosition_touch = Input.GetTouch(0).position;
+					detailPosition_touch = currentPosition_touch - prePosition_touch;
 					
 					if (Mathf.Abs(downPosition_touch.x - currentPosition_touch.x) > MOVE_DELTA || 
 					    Mathf.Abs(downPosition_touch.y - currentPosition_touch.y) > MOVE_DELTA )
@@ -343,8 +394,11 @@ public class Input3DController : MonoBehaviour
 			{
 				touch2StartTime = _currTime;
 				oldDistance_touch = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
+				prePosition_touch = Vector3.zero;
 				currentPosition_touch = Input.GetTouch(0).position;
+				detailPosition_touch = Vector3.zero;
 				currentPosition2_touch = Input.GetTouch(1).position;
+				detailPosition2_touch = Vector3.zero;
 				downPosition_touch = currentPosition_touch;
 				downPosition2_touch = currentPosition2_touch;
 				touchMoveAway2_touch = false;
@@ -363,456 +417,205 @@ public class Input3DController : MonoBehaviour
 								touchMoveAway2_touch = true;
 							}
 						}
+
+						prePosition_touch = currentPosition_touch;
+						currentPosition_touch = Input.GetTouch(0).position;
+						detailPosition_touch = currentPosition_touch - prePosition_touch;
+						prePosition2_touch = currentPosition2_touch;
+						currentPosition2_touch = Input.GetTouch(1).position;
+						detailPosition2_touch = currentPosition2_touch - prePosition2_touch;
 						
-						if (touchMoveAway2_touch)
-						{
-							if (!touch2TypeDecided)
-							{
-								//judge is room or rotate
-								touch2Zooming = false;
-								touch2Rotating = false;	
-																			
+						// if (touchMoveAway2_touch)
+						// {
+						// 	if (!touch2TypeDecided)
+						// 	{
+						// 		//judge is room or rotate
+						// 		touch2Zooming = false;
+						// 		touch2Rotating = false;	
+						// 		touch2Angleing = false;											
 						
-								Vector3 newPos1 = Input.GetTouch(0).position;
-								Vector3 newPos2 = Input.GetTouch(1).position;								
+						// 		Vector3 newPos1 = Input.GetTouch(0).position;
+						// 		Vector3 newPos2 = Input.GetTouch(1).position;								
 								
-								float angleChange_all = Vector3.Angle(newPos2 - newPos1 , downPosition2_touch - downPosition_touch);
-								float distanceChange = Vector3.Distance(newPos2 , newPos1) - Vector3.Distance(downPosition2_touch, downPosition_touch);
-								float distanceChangePercent = Mathf.Abs(distanceChange) / Mathf.Abs(Vector3.Distance(downPosition2_touch, downPosition_touch));
-								// DebugUtils.LogTouch("angleChange_all "+angleChange_all);
+						// 		float angleChange_all = Vector3.Angle(newPos2 - newPos1 , downPosition2_touch - downPosition_touch);
+						// 		float distanceChange = Vector3.Distance(newPos2 , newPos1) - Vector3.Distance(downPosition2_touch, downPosition_touch);
+						// 		float distanceChangePercent = Mathf.Abs(distanceChange) / Mathf.Abs(Vector3.Distance(downPosition2_touch, downPosition_touch));
+						// 		// DebugUtils.LogTouch("angleChange_all "+angleChange_all);
 								
-								if (distanceChangePercent >= FINGER_2_JUDGE_ZOOM_DISTANCE_CHANGE || angleChange_all <= FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE) //if is zoom
-								{			
-									float angleChange_cross = Vector3.Angle(newPos2 - downPosition2_touch , newPos1 - downPosition_touch);	
-									if (angleChange_cross > 90) // if move different direction
-									{
-										if (distanceChangePercent >= FINGER_2_JUDGE_ZOOM_DISTANCE_CHANGE)
-										{
-											touch2Zooming = true; 
-											touch2Rotating = false;	
-											touch2TypeDecided = true;	
-											// DebugUtils.LogTouch("decided touch2Zooming");
-										}
-										else if (angleChange_all > FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE)
-										{
-											touch2Rotating = true; 
-											touch2Zooming = false;	
-											touch2TypeDecided = true;	
-											// DebugUtils.LogTouch("decided touch2Rotate 0");
-										}
-										else
-										{
-											//waiting
-										}
-									}
-									else
-									{
-										touch2Rotating = true;
-										touch2Zooming = false;	
-										touch2TypeDecided = true;	 
-										// DebugUtils.LogTouch("decided touch2Rotate 1");
-									}	
+						// 		if (distanceChangePercent >= FINGER_2_JUDGE_ZOOM_DISTANCE_CHANGE || angleChange_all <= FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE) //if is zoom
+						// 		{			
+						// 			float angleChange_cross = Vector3.Angle(newPos2 - downPosition2_touch , newPos1 - downPosition_touch);	
+						// 			if (angleChange_cross > 60) // if move different direction
+						// 			{
+						// 				if (distanceChangePercent >= FINGER_2_JUDGE_ZOOM_DISTANCE_CHANGE)
+						// 				{
+						// 					touch2Zooming = true; 
+						// 					touch2Rotating = false;	
+						// 					touch2TypeDecided = true;	
+						// 					// DebugUtils.LogTouch("decided touch2Zooming");
+						// 				}
+						// 				else if (angleChange_all > FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE)
+						// 				{
+						// 					touch2Rotating = true; 
+						// 					touch2Zooming = false;	
+						// 					touch2TypeDecided = true;	
+						// 					// DebugUtils.LogTouch("decided touch2Rotate 0");
+						// 				}
+						// 				else
+						// 				{
+						// 					//waiting
+						// 				}
+						// 			}
+						// 			else
+						// 			{
+						// 				touch2FingerSameDeltaY_touch = (newPos1.y - downPosition_touch.y + newPos2.y - downPosition2_touch.y)/2;
+						// 				touch2Rotating = false;
+						// 				touch2Angleing = true;
+						// 				touch2Zooming = false;	
+						// 				touch2TypeDecided = true;	
+						// 				// DebugUtils.LogTouch("decided touch2Rotate 1");
+						// 			}	
 									
-									if (touch2TypeDecided)
-									{
-										mCameraState = CAMERA_STATE.eIdle;
-										currentPosition_touch = Input.GetTouch(0).position;
-										currentPosition2_touch = Input.GetTouch(1).position;	
-									}
-								}
+						// 			if (touch2TypeDecided)
+						// 			{
+						// 				mCameraState = CAMERA_STATE.eIdle;
+
+						// 				prePosition_touch = currentPosition_touch;
+						// 				currentPosition_touch = Input.GetTouch(0).position;
+						// 				detailPosition_touch = currentPosition_touch - prePosition_touch;
+						// 				prePosition2_touch = currentPosition2_touch;
+						// 				currentPosition2_touch = Input.GetTouch(1).position;
+						// 				detailPosition2_touch = currentPosition2_touch - prePosition2_touch;
+						// 			}
+						// 		}
 								
-								if (angleChange_all > FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE)
-								{
-									touch2Rotating = true;
-									touch2TypeDecided = true;	
-									// DebugUtils.LogTouch("decided touch2Rotate 3");
-									currentPosition_touch = Input.GetTouch(0).position;
-									currentPosition2_touch = Input.GetTouch(1).position;	
-								}
+						// 		if (angleChange_all > FINGER_2_JUDGE_ZOOM_ANGLE_CHANGE)
+						// 		{
+						// 			touch2Rotating = true;
+						// 			touch2Angleing = false;
+						// 			touch2TypeDecided = true;	
+						// 			// DebugUtils.LogTouch("decided touch2Rotate 3");
+						// 			prePosition_touch = currentPosition_touch;
+						// 			currentPosition_touch = Input.GetTouch(0).position;
+						// 			detailPosition_touch = currentPosition_touch - prePosition_touch;
+						// 			prePosition2_touch = currentPosition2_touch;
+						// 			currentPosition2_touch = Input.GetTouch(1).position;
+						// 			detailPosition2_touch = currentPosition2_touch - prePosition2_touch;
+						// 		}
 								
-							}
-							else
-							{								
-								if (touch2Zooming || mCameraState == CAMERA_STATE.eZooming)
-								{
-									mCameraState = CAMERA_STATE.eZooming;
-									newDistance_touch = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
-									deltaY_touch = newDistance_touch - oldDistance_touch;
-									// DebugUtils.LogTouch("zooming deltaY "+deltaY_touch);
-								}
+						// 	}
+						// 	else
+						// 	{								
+						// 		if (touch2Zooming || mCameraState == CAMERA_STATE.eZooming)
+						// 		{
+						// 			//mCameraState = CAMERA_STATE.eZooming;
+						// 			newDistance_touch = Vector2.Distance(Input.GetTouch(0).position, Input.GetTouch(1).position);
+						// 			deltaY_touch = newDistance_touch - oldDistance_touch;
+						// 			// DebugUtils.LogTouch("zooming deltaY "+deltaY_touch);
+						// 		}
 								
-								touch2FingerDeltaAngle = 0f;
-								if (touch2Rotating)
-								{
-									mCameraState = CAMERA_STATE.eRotating;
+						// 		touch2FingerDeltaAngle = 0f;
+						// 		if (touch2Rotating)
+						// 		{
+						// 			//mCameraState = CAMERA_STATE.eRotating;
 									
-									bool sameSide = false;									
-									Vector3 newPos1 = Input.GetTouch(0).position;
-									Vector3 newPos2 = Input.GetTouch(1).position;									
+						// 			// bool sameSide = false;									
+						// 			Vector3 newPos1 = Input.GetTouch(0).position;
+						// 			Vector3 newPos2 = Input.GetTouch(1).position;									
 									
-									float angleChange_cross = Vector3.Angle(newPos2 - currentPosition2_touch , newPos1 - currentPosition_touch);	
-									if (angleChange_cross < 90) // if move together at same side
-									{
-										sameSide = true;
+						// 			// float angleChange_cross = Vector3.Angle(newPos2 - currentPosition2_touch , newPos1 - currentPosition_touch);	
+						// 			// if (angleChange_cross < 90) // if move together at same side
+						// 			// {
+						// 			// 	sameSide = true;
 										
-										//caculate angels by screen center point
-										Vector3 midlePoint = new Vector3(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, currentPosition_touch.z);
+						// 			// 	//caculate angels by screen center point
+						// 			// 	Vector3 midlePoint = new Vector3(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, currentPosition_touch.z);
 										
-										float angleChange_1 = SignAngle(currentPosition_touch - midlePoint, newPos1 - midlePoint );								
-										float angleChange_2 = SignAngle(currentPosition2_touch - midlePoint, newPos2 - midlePoint );
+						// 			// 	float angleChange_1 = SignAngle(currentPosition_touch - midlePoint, newPos1 - midlePoint );								
+						// 			// 	float angleChange_2 = SignAngle(currentPosition2_touch - midlePoint, newPos2 - midlePoint );
 										
-										touch2FingerDeltaAngle = (angleChange_1 + angleChange_2) / 2;
-										// DebugUtils.LogTouch("1 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
-									}						
+						// 			// 	touch2FingerDeltaAngle = (angleChange_1 + angleChange_2) / 2;
+						// 			// 	// DebugUtils.LogTouch("1 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
+						// 			// }						
 									
-									//judge by center point of two start point
-									if (!sameSide)
-									{
-										Vector3 midlePoint = new Vector3((currentPosition_touch.x + currentPosition2_touch.x)/2,
-											(currentPosition_touch.y + currentPosition2_touch.y)/2,
-											(currentPosition_touch.z + currentPosition2_touch.z)/2);
+						// 			// //judge by center point of two start point
+						// 			// if (!sameSide)
+						// 			// {
+						// 				Vector3 midlePoint = new Vector3((currentPosition_touch.x + currentPosition2_touch.x)/2,
+						// 					(currentPosition_touch.y + currentPosition2_touch.y)/2,
+						// 					(currentPosition_touch.z + currentPosition2_touch.z)/2);
 										
-										float angleChange_1 = SignAngle(currentPosition_touch - midlePoint,  newPos1 - midlePoint);								
-										float angleChange_2 = SignAngle(currentPosition2_touch - midlePoint,  newPos2 - midlePoint);
+						// 				float angleChange_1 = SignAngle(currentPosition_touch - midlePoint,  newPos1 - midlePoint);								
+						// 				float angleChange_2 = SignAngle(currentPosition2_touch - midlePoint,  newPos2 - midlePoint);
 										
-										if ( angleChange_1 * angleChange_2 > 0 )
-										{
-											sameSide = true;
+						// 				if ( angleChange_1 * angleChange_2 > 0 )
+						// 				{
+						// 					// sameSide = true;
 											
-											touch2FingerDeltaAngle = SignAngle(currentPosition2_touch - currentPosition_touch, newPos2 - newPos1);
-										//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
-										//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
+						// 					touch2FingerDeltaAngle = SignAngle(currentPosition2_touch - currentPosition_touch, newPos2 - newPos1);
+						// 				//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
+						// 				//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
 											
-											// DebugUtils.LogTouch("2 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
-										}
+						// 					// DebugUtils.LogTouch("2 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
+						// 				}
 										
 										
-										if((angleChange_1 == 0 && angleChange_2 != 0) || (angleChange_2 == 0 && angleChange_1 != 0)) //if one finger move, one stop
-										{
-											sameSide = true;
-											if (angleChange_1 == 0)
-												touch2FingerDeltaAngle = SignAngle(currentPosition2_touch - currentPosition_touch, newPos2 - currentPosition_touch);	
-											if (angleChange_2 == 0)
-												touch2FingerDeltaAngle = SignAngle(currentPosition_touch - currentPosition2_touch, newPos1 - currentPosition2_touch);	
+						// 				if((angleChange_1 == 0 && angleChange_2 != 0) || (angleChange_2 == 0 && angleChange_1 != 0)) //if one finger move, one stop
+						// 				{
+						// 					// sameSide = true;
+						// 					if (angleChange_1 == 0)
+						// 						touch2FingerDeltaAngle = SignAngle(currentPosition2_touch - currentPosition_touch, newPos2 - currentPosition_touch);	
+						// 					if (angleChange_2 == 0)
+						// 						touch2FingerDeltaAngle = SignAngle(currentPosition_touch - currentPosition2_touch, newPos1 - currentPosition2_touch);	
 											
-										//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
-										//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
+						// 				//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
+						// 				//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
 											
-											// DebugUtils.LogTouch("3 one touch one stop touch2FingerDeltaAngle "+touch2FingerDeltaAngle);	
-										}
+						// 					// DebugUtils.LogTouch("3 one touch one stop touch2FingerDeltaAngle "+touch2FingerDeltaAngle);	
+						// 				}
 										
-										if (angleChange_1 == 0 && angleChange_2 == 0)
-										{
-											touch2FingerDeltaAngle = 0;
-											// DebugUtils.LogTouch("2 finger all stop ");	
-										}
+						// 				if (angleChange_1 == 0 && angleChange_2 == 0)
+						// 				{
+						// 					touch2FingerDeltaAngle = 0;
+						// 					// DebugUtils.LogTouch("2 finger all stop ");	
+						// 				}
 									
-									}									
+						// 			}									
 									
-									//still not same direction, useless
+						// 			//still not same direction, useless
 									
-									if (!sameSide)										
-									{										
-										// DebugUtils.LogTouch("not same direction, abandon");
-										touch2FingerDeltaAngle = 0;
-									}
-								}
+						// 			// if (!sameSide)										
+						// 			// {										
+						// 			// 	// DebugUtils.LogTouch("not same direction, abandon");
+						// 			// 	touch2FingerDeltaAngle = 0;
+						// 			// }
+						// 		}
+
+						// 		if(touch2Angleing)
+						// 		{
+						// 			mCameraState = CAMERA_STATE.eAngle;
+						// 		}
 								
-								touch2FingerDeltaAngle = -touch2FingerDeltaAngle;								
+						// 		touch2FingerDeltaAngle = -touch2FingerDeltaAngle;								
 								
-								currentPosition_touch = Input.GetTouch(0).position;
-								currentPosition2_touch = Input.GetTouch(1).position;
-							}
-						}
+						// 		prePosition_touch = currentPosition_touch;
+						// 		currentPosition_touch = Input.GetTouch(0).position;
+						// 		detailPosition_touch = currentPosition_touch - prePosition_touch;
+						// 		prePosition2_touch = currentPosition2_touch;
+						// 		currentPosition2_touch = Input.GetTouch(1).position;
+						// 		detailPosition2_touch = currentPosition2_touch - prePosition2_touch;
+						// 	}
+						// }
 					}					
 				}			
-			}			
-			//PandaUI.Instance.allowUserInput = false;
-		}
-		// rotation z
-		else if (fingerCount == 3)
-		{
-			touch3Finger = true;
-			
-			if (touch2Finger_touch && !touchMoveAway2_touch)
-			{
-				touch3Finger = true;
-				startTouch3Finger = false;
-				touch2Finger_touch = false;
-				touch2TypeDecided = false;
-				mCameraState = CAMERA_STATE.eIdle;
 			}
-			//print("3 touch move ");
-			
-			if (!startTouch3Finger)
-			{
-				startTouch3Finger = true;
-				currentPosition_touch = Input.GetTouch(0).position;
-				currentPosition2_touch = Input.GetTouch(1).position;
-				currentPosition3 = Input.GetTouch(2).position;
-				downPosition_touch = currentPosition_touch;
-				downPosition2_touch = currentPosition2_touch;
-				downPosition3 = currentPosition3;
-				touchMoveAway3 = false;
-				touch3Pitching = false;
-				touch3Rotating = false;
-				touch3TypeDecided = false;
-			}
-			else
-			{
-				//if (!touch3TypeDecided)
-				{
-					Vector3 delta0 = Vector3.zero;
-					Vector3 delta1 = Vector3.zero;
-					Vector3 delta2 = Vector3.zero;
-					if (Input.GetTouch(0).phase == TouchPhase.Moved)
-					{
-						Vector3 newPos = Input.GetTouch(0).position;
-						delta0 = newPos - downPosition_touch;
-						//Vector3 newPos2 = Input.GetTouch(1).position;								
-						/*
-						float angleChange_all = Vector3.Angle(newPos2 - newPos1 , downPosition2_touch - downPosition_touch);
-						float distanceChange = Vector3.Distance(newPos2 , newPos1) - Vector3.Distance(downPosition2_touch, downPosition_touch);
-						float distanceChangePercent = Mathf.Abs(distanceChange) / Mathf.Abs(Vector3.Distance(downPosition2_touch, downPosition_touch));
-						DebugUtils.LogTouch("angleChange_all "+angleChange_all);
-						*/
-
-						//float angleChange_cross = Vector3.Angle(newPos2 - downPosition2_touch , newPos1 - downPosition_touch);	
-
-					}
-					if (Input.GetTouch(1).phase == TouchPhase.Moved)
-					{
-						Vector3 newPos = Input.GetTouch(1).position;
-						delta1 = newPos - downPosition2_touch;
-					}
-					if (Input.GetTouch(2).phase == TouchPhase.Moved)
-					{
-						Vector3 newPos = Input.GetTouch(2).position;
-						delta2 = newPos - downPosition3;
-					}
-
-					float angleChange_cross = 0.0f;
-					float SMALL_NUMBER = MOVE_DELTA * MOVE_DELTA;
-					if (delta0.sqrMagnitude > SMALL_NUMBER && delta1.sqrMagnitude > SMALL_NUMBER)
-					{
-						angleChange_cross = Vector3.Angle(delta0 , delta1);	
-						touch3Rotating_finger1 = 0;
-						touch3Rotating_finger2 = 1;
-					}
-					if (delta0.sqrMagnitude > SMALL_NUMBER && delta2.sqrMagnitude > SMALL_NUMBER)
-					{
-						float another_angleChange_cross = Vector3.Angle(delta0 , delta2);	
-						if (another_angleChange_cross > angleChange_cross)
-						{
-							angleChange_cross = another_angleChange_cross;
-							touch3Rotating_finger1 = 0;
-							touch3Rotating_finger2 = 2;
-						}
-					}
-					if (delta1.sqrMagnitude > SMALL_NUMBER && delta2.sqrMagnitude > SMALL_NUMBER)
-					{
-						float another_angleChange_cross = Vector3.Angle(delta1 , delta2);	
-						if (another_angleChange_cross > angleChange_cross)
-						{
-							angleChange_cross = another_angleChange_cross;
-							touch3Rotating_finger1 = 1;
-							touch3Rotating_finger2 = 2;
-						}
-					}
-					if (angleChange_cross > 90)
-					{
-						touch3Pitching = false;
-						touch3Rotating = true;
-						touch3TypeDecided = true;
-					}
-
-					if (Input.GetTouch(0).phase == TouchPhase.Moved || Input.GetTouch(1).phase == TouchPhase.Moved || Input.GetTouch(2).phase == TouchPhase.Moved)
-					{
-						if (!touchMoveAway3)
-						{
-							if ((Mathf.Abs(downPosition_touch.x - Input.GetTouch(0).position.x) > MOVE_DELTA || Mathf.Abs(downPosition_touch.y - Input.GetTouch(0).position.y) > MOVE_DELTA)
-								|| (Mathf.Abs(downPosition2_touch.x - Input.GetTouch(1).position.x) > MOVE_DELTA || Mathf.Abs(downPosition2_touch.y - Input.GetTouch(1).position.y) > MOVE_DELTA)							
-								|| (Mathf.Abs(downPosition3.x - Input.GetTouch(2).position.x) > MOVE_DELTA || Mathf.Abs(downPosition3.y - Input.GetTouch(2).position.y) > MOVE_DELTA))
-							{
-								touchMoveAway3 = true;
-							}
-						}
-						
-						if (touchMoveAway3)
-						{						
-							if (Input.GetTouch(0).phase == TouchPhase.Moved && Input.GetTouch(1).phase == TouchPhase.Moved && Input.GetTouch(2).phase == TouchPhase.Moved)
-							{
-								if ((   
-                                        -Input.GetTouch(0).position.y + currentPosition_touch.y > 0 || 
-                                        -Input.GetTouch(1).position.y + currentPosition2_touch.y > 0 || 
-                                        -Input.GetTouch(2).position.y + currentPosition3.y > 0 )
-									||  (
-                                        -Input.GetTouch(0).position.y + currentPosition_touch.y < 0 || 
-                                        -Input.GetTouch(1).position.y + currentPosition2_touch.y < 0 || 
-                                        -Input.GetTouch(2).position.y + currentPosition3.y < 0 ))
-								{
-									touch3Pitching = true;
-									touch3Rotating = false;
-									touch3TypeDecided = true;
-									touch3FingerDeltaY = Input.GetTouch(0).position.y - currentPosition_touch.y;
-								}
-
-								if ((
-                                        -Input.GetTouch(0).position.x + currentPosition_touch.x > 0 || 
-                                        -Input.GetTouch(1).position.x + currentPosition2_touch.x > 0 || 
-                                        -Input.GetTouch(2).position.x + currentPosition3.x > 0)
-								    || (
-                                        -Input.GetTouch(0).position.x + currentPosition_touch.x < 0 || 
-                                        -Input.GetTouch(1).position.x + currentPosition2_touch.x < 0 || 
-                                        -Input.GetTouch(2).position.x + currentPosition3.x < 0))
-								{
-
-									touch3FingerDeltaX = Input.GetTouch(0).position.x - currentPosition_touch.x;
-									if (Input.GetTouch(0).position.y > SCREEN_HEIGHT /2 )
-									{
-										touch3FingerDeltaX *= (-1);
-									}
-								}
-							}
-						}
-					}
-				}
-#region NotUsed
-				/*
-				else
-				{
-					if (touch3Pitching)
-					{
-						touch3FingerDeltaY = Input.GetTouch(0).position.y - currentPosition_touch.y;
-					}
-					else if (touch3Rotating)
-					{
-						touch2FingerDeltaAngle = 0f;
-						
-						Vector3 newPos1 = Input.GetTouch(touch3Rotating_finger1).position;
-						Vector3 newPos2 = Input.GetTouch(touch3Rotating_finger2).position;	
-						
-						Vector3 _currentPosition2_touch = new Vector3();
-						Vector3 _currentPosition_touch = new Vector3();
-
-						if (touch3Rotating_finger1 == 0)
-						{
-							_currentPosition_touch = currentPosition_touch;
-						}
-						else if (touch3Rotating_finger1 == 1)
-						{
-							_currentPosition_touch = currentPosition2_touch;
-						}
-						else if (touch3Rotating_finger1 == 2)
-						{
-							_currentPosition_touch = currentPosition3;
-						}
-
-						if (touch3Rotating_finger2 == 0)
-						{
-							_currentPosition2_touch = currentPosition_touch;
-						}
-						else if (touch3Rotating_finger2 == 1)
-						{
-							_currentPosition2_touch = currentPosition2_touch;
-						}
-						else if (touch3Rotating_finger2 == 2)
-						{
-							_currentPosition2_touch = currentPosition3;
-						}
-
-								
-								{
-									mCameraState = CAMERA_STATE.eRotating;
-									
-									bool sameSide = false;									
-																	
-									
-									float angleChange_cross = Vector3.Angle(newPos2 - _currentPosition2_touch , newPos1 - _currentPosition_touch);	
-									if (angleChange_cross < 90) // if move together at same side
-									{
-										sameSide = true;
-										
-										//caculate angels by screen center point
-										Vector3 midlePoint = new Vector3(ScreenWrapper.width/2, ScreenWrapper.height/2, _currentPosition_touch.z);
-										
-										float angleChange_1 = SignAngle(_currentPosition_touch - midlePoint, newPos1 - midlePoint );								
-										float angleChange_2 = SignAngle(_currentPosition2_touch - midlePoint, newPos2 - midlePoint );
-										
-										touch2FingerDeltaAngle = (angleChange_1 + angleChange_2) / 2;
-										DebugUtils.LogTouch("1 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
-									}						
-									
-									//judge by center point of two start point
-									if (!sameSide)
-									{
-										Vector3 midlePoint = new Vector3((_currentPosition_touch.x + _currentPosition2_touch.x)/2,
-											(_currentPosition_touch.y + _currentPosition2_touch.y)/2,
-											(_currentPosition_touch.z + _currentPosition2_touch.z)/2);
-										
-										float angleChange_1 = SignAngle(_currentPosition_touch - midlePoint,  newPos1 - midlePoint);								
-										float angleChange_2 = SignAngle(_currentPosition2_touch - midlePoint,  newPos2 - midlePoint);
-										
-										if ( angleChange_1 * angleChange_2 > 0 )
-										{
-											sameSide = true;
-											
-											touch2FingerDeltaAngle = SignAngle(_currentPosition2_touch - _currentPosition_touch, newPos2 - newPos1);
-										//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
-										//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
-											
-											DebugUtils.LogTouch("2 same touch2FingerDeltaAngle "+touch2FingerDeltaAngle);
-										}
-										
-										
-										if((angleChange_1 == 0 && angleChange_2 != 0) || (angleChange_2 == 0 && angleChange_1 != 0)) //if one finger move, one stop
-										{
-											sameSide = true;
-											if (angleChange_1 == 0)
-												touch2FingerDeltaAngle = SignAngle(_currentPosition2_touch - _currentPosition_touch, newPos2 - _currentPosition_touch);	
-											if (angleChange_2 == 0)
-												touch2FingerDeltaAngle = SignAngle(_currentPosition_touch - _currentPosition2_touch, newPos1 - _currentPosition2_touch);	
-											
-										//	int direction = touch2FingerDeltaAngle >= 0 ? 1: -1;
-										//	touch2FingerDeltaAngle = FINGER_2_ROTATE_SPEED_PER_SECOND * direction * mDeltaTime;
-											
-											DebugUtils.LogTouch("3 one touch one stop touch2FingerDeltaAngle "+touch2FingerDeltaAngle);	
-										}
-										
-										if (angleChange_1 == 0 && angleChange_2 == 0)
-										{
-											touch2FingerDeltaAngle = 0;
-											DebugUtils.LogTouch("2 finger all stop ");	
-										}
-									
-									}									
-									
-									//still not same direction, useless
-									
-									if (!sameSide)										
-									{										
-										DebugUtils.LogTouch("not same direction, abandon");
-										touch2FingerDeltaAngle = 0;
-									}
-								} 
-					}
-				}
-				touch2FingerDeltaAngle = -touch2FingerDeltaAngle;		
-*/
-#endregion
-				currentPosition_touch = Input.GetTouch(0).position;
-				currentPosition2_touch = Input.GetTouch(1).position;
-				currentPosition3 = Input.GetTouch(2).position;
-			}
-			
-			//PandaUI.Instance.allowUserInput = false;
 		}
 		else
 		{
 			//print("no touch move ");
 			if (touch2Finger_touch)
 			{
-				if (!touchMoveAway2_touch)
+				// if (!touchMoveAway2_touch)
 				{
 					touch2FingerReleased_touch = true;
 				}
@@ -836,8 +639,11 @@ public class Input3DController : MonoBehaviour
 			touch2TypeDecided = false;
 			touch2Rotating = false;
 			touch2Zooming = false;
+			touch2Angleing = false;
 			oldDistance_touch = 0;
 			currentPosition_touch = Vector3.zero;
+			detailPosition_touch = Vector3.zero;
+			prePosition_touch = Vector3.zero;
 
 			touch3TypeDecided = false;
 			touch3Rotating = false;
@@ -908,16 +714,35 @@ public class Input3DController : MonoBehaviour
 #endif
 		if(isDown)
 		{
-			RaycastHit hit;
-			Ray ray = mCurCamera.ScreenPointToRay (currentPosition);
-            if (Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << MOVE_LAYER))
-            {
-                downPositionInWorldSpace = hit.point;
-            }
+			downPositionInScreen = currentPosition;
+			downPositionInWorldSpace = bCamera.transform.position;
+			// RaycastHit hit;
+			// Ray ray = mCurCamera.ScreenPointToRay (currentPosition);
+   //          if (Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << Consts.CAMERA_MOVE_LAYER))
+   //          {
+   //              downPositionInWorldSpace = hit.point;
+   //          }
 		}
-		{
-			ControlCamera();
-		}
+
+		// if(UI_Event.sIsEvent)
+		// {
+		// 	UI_Event.sIsEvent = false;
+		// 	// Debug.Log("is ui event");
+		// 	return;
+		// }
+
+		
+		// if(!ForcsOnUI)
+		// {
+		// 	if(BuildingManager.instance.mCurrentBuildingControl == null && !RoadManager.instance.mInputLock)
+		// 	{
+		// 		ControlCamera();
+		// 	}
+		// 	if(!RoadManager.instance.mInputLock)
+  //           	ControlBuilding();
+		// 	ControlBuildRoadConstruction();
+		// }
+	
 
         // unset wasDragged if we have finished processing isReleased during this update.
         if (isReleased && wasDragged)
@@ -1003,159 +828,180 @@ public class Input3DController : MonoBehaviour
 #endif
 		mCameraState = CAMERA_STATE.eIdle;
 	}
+
+	// public bool mCanControlSeaMap = false;
+	void ControlSeaMap()
+	{
+// 		if(!mCanControlSeaMap) return;
+
+// 		UISeaMap ui_sea = MenuManager.instance.FindMenu<UISeaMap>();
+// 		if(ui_sea == null) return;
+
+// #if UNITY_EDITOR || UNITY_PLAYER || UNITY_STANDALONE_WIN || UNITY_METRO
+// 		if (deltaY_mouse != 0)
+// 		{
+// 			float dy = -Mathf.Sign(deltaY_mouse);
+// 			ui_sea.Zoom(dy);
+// 		}
+// 		else if ((deltaX != 0 || deltaZ != 0))
+// 		{
+//             ui_sea.Move((downPosition.x - currentPosition.x)*Time.deltaTime, (downPosition.y - currentPosition.y)*Time.deltaTime);
+// 		}
+// #endif
+// #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO
+// 		if (touch2Finger_touch)
+// 		{
+// 			if (Mathf.Abs(deltaY_touch) > iPhoneZoomDeltaValue)
+// 			{
+// 				float dy = -Mathf.Sign(deltaY_touch);
+// 				oldDistance_touch = newDistance_touch;
+// 				// bCamera.Zoom(dy);
+// 				ui_sea.Zoom(dy);
+// 			}
+// 		}
+// 		else
+// 		{
+// 			//
+// 		}
+// #endif
+// 		// rotate to default rotation
+// 		else if (touch2FingerReleased && mCameraState == CAMERA_STATE.eIdle )
+// 		{
+// 			// bCamera.RotateBack();
+// 		}
+// 		// no input and move
+// 		else if (!isPressed && !isDown && !touch2Finger)
+// 		{
+// 			//DebugUtils.Log("SmoothStop ");
+// 			// bCamera.SmoothStop();
+			
+// 			//hasInput = false;
+// 		}
+
+	}
 	
 	void ControlCamera()
 	{
 		if (enableCamera && bCamera)
 		{
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO
-            // Touch3Finger should have highest priority in this if/else rundown. 
-            // This fixes issues with unresponsive 3 finger touching. -HH
-            if (touch3Finger)
-			{
-
-				if (mCameraState == CAMERA_STATE.eIdle || mCameraState == CAMERA_STATE.eMoving)
-				{
-					if (touch3FingerDeltaX != 0 || touch3FingerDeltaY != 0)
-						mCameraState = CAMERA_STATE.eAngle;
-				}
-
-				if (mCameraState == CAMERA_STATE.eAngle)
-				{
-					bCamera.Rotate(0, (touch3FingerDeltaY / SCREEN_HEIGHT),50);
-					bCamera.Rotate(touch3FingerDeltaX * 0.3f, false);
-				}
-				else if (mCameraState == CAMERA_STATE.eRotating)
-				{
-					// DebugUtils.LogTouch("rotate "+touch2FingerDeltaAngle);
-					bCamera.Rotate(touch2FingerDeltaAngle, false);
-					//bCamera.Rotate(touch2FingerDeltaX_touch / ScreenWrapper.width, 0);
-				}
-			}
-            else
-#endif
-
 			// Check for Camera MOVING.
 			if ((deltaX != 0 || deltaZ != 0) && (mCameraState == CAMERA_STATE.eIdle || mCameraState == CAMERA_STATE.eMoving || mCameraState == CAMERA_STATE.ePressingBuilding))
 			{
 				//Debug.LogError("mCameraState  " + mCameraState);
 				if (mCameraState == CAMERA_STATE.eIdle)
 					mCameraState = CAMERA_STATE.eMoving;
-				// if camera move, the touch position should always point to "downPositionInWorldSpace" 
-				RaycastHit hit;
-                Vector3 currentPointInWorldSpace = downPositionInWorldSpace;
 
-                Ray ray = mCurCamera.ScreenPointToRay (currentPosition);
-                if (Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << MOVE_LAYER))
-                {
-                    currentPointInWorldSpace = hit.point;
-                }
+				Vector3 move_position = (downPositionInScreen - currentPosition) * 60f;
+				move_position.x = move_position.x / Screen.width;
+				move_position.y = move_position.y / Screen.height;
+				//Debug.Log("move_position " + move_position);
+				bCamera.MoveEx(downPositionInWorldSpace, move_position.x , move_position.y);
+
+				// // if camera move, the touch position should always point to "downPositionInWorldSpace" 
+				// RaycastHit hit;
+    //             Vector3 currentPointInWorldSpace = downPositionInWorldSpace;
+
+    //             Ray ray = mCurCamera.ScreenPointToRay (currentPosition);
+    //             if (Physics.Raycast (ray, out hit, Mathf.Infinity, 1 << Consts.CAMERA_MOVE_LAYER))
+    //             {
+    //                 currentPointInWorldSpace = hit.point;
+    //             }
                 
-                bCamera.Move(downPositionInWorldSpace.x - currentPointInWorldSpace.x, downPositionInWorldSpace.z - currentPointInWorldSpace.z);
+    //             bCamera.Move(downPositionInWorldSpace.x - currentPointInWorldSpace.x, downPositionInWorldSpace.z - currentPointInWorldSpace.z);
                 
-                // bCamera.Move((downPosition.x - currentPosition.x)*Time.deltaTime, (downPosition.y - currentPosition.y)*Time.deltaTime);
+    //             // bCamera.Move((downPosition.x - currentPosition.x)*Time.deltaTime, (downPosition.y - currentPosition.y)*Time.deltaTime);
 			}
 
-#if UNITY_EDITOR || UNITY_PLAYER || UNITY_STANDALONE_WIN || UNITY_METRO
-			else if (deltaY_mouse != 0 && (mCameraState == CAMERA_STATE.eIdle || mCameraState == CAMERA_STATE.eZooming))
+#if UNITY_EDITOR || UNITY_PLAYER || UNITY_STANDALONE_WIN
+			else if(touch2Finger_mouse)
 			{
-				mCameraState = CAMERA_STATE.eZooming;
-				float dy = -Mathf.Sign(deltaY_mouse);
-				bCamera.Zoom(dy);
-			}
-			
-			else if (touch2FingerDeltaX_mouse != 0 || touch2FingerDeltaY_mouse != 0)
-			{
-				// see which rotation
-				if (mCameraState == CAMERA_STATE.eIdle)
+				if (Input.GetMouseButton(2) && (mCameraState == CAMERA_STATE.eIdle || mCameraState == CAMERA_STATE.eAngle))
 				{
-					if (Mathf.Abs(touch2FingerDeltaX_mouse) >= Mathf.Abs(touch2FingerDeltaY_mouse))
-					{
-						mCameraState = CAMERA_STATE.eRotating;
-					}
-					else
-					{
-						mCameraState = CAMERA_STATE.eAngle;
-					}
+					mCameraState = CAMERA_STATE.eAngle;
+					bCamera.RotateX(touch2FingerDeltaY_mouse);
 				}
-				
-				if (touch2FingerDeltaX_mouse != 0 && mCameraState == CAMERA_STATE.eRotating)
+				else if (touch2FingerDeltaX_mouse != 0 || touch2FingerDeltaY_mouse != 0)
 				{
-					bCamera.Rotate(touch2FingerDeltaX_mouse / SCREEN_WIDTH, 0);
-				}
-				else if (touch2FingerDeltaY_mouse != 0 && mCameraState == CAMERA_STATE.eAngle)
-				{
-					bCamera.Rotate(0, touch2FingerDeltaY_mouse/ SCREEN_HEIGHT, 50);
+					//downPosition2_mouse
+					mCameraState = CAMERA_STATE.eRotating;
+					{
+						bCamera.RotateY(touch2FingerDeltaX_mouse);
+						//float dy = -Mathf.Sign(touch2FingerDeltaY_mouse)*20f;
+						bCamera.ZoomEx(touch2FingerDeltaY_mouse);
+						//bCamera.Rotate(0, touch2FingerDeltaY_mouse/ SCREEN_HEIGHT, 50);
+					}
 				}
 			}
 #endif
 
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WP8 || UNITY_METRO
-			else if (touch2Finger_touch)
+			else if (touch2Finger_touch && touchMoveAway2_touch)
 			{
-				if (mCameraState == CAMERA_STATE.eIdle || mCameraState == CAMERA_STATE.eMoving)
-				{
-					if (touch2Zooming)
-					{
-						mCameraState = CAMERA_STATE.eZooming;
-					}
-					else if (touch2Rotating)
-					{
-						mCameraState = CAMERA_STATE.eRotating;
-					}
+				Vector3 newPos1 = currentPosition_touch;
+				Vector3 newPos2 = currentPosition2_touch;
 
-					/*
-					else if (touch2FingerDeltaX_touch != 0 || touch2FingerDeltaY_touch != 0)
-					{
-						// see which rotation
-						if (Mathf.Abs(touch2FingerDeltaX_touch) >= Mathf.Abs(touch2FingerDeltaY_touch))
-						{
-							mCameraState = CAMERA_STATE.eRotating;
-						}
-						else
-						{
-							//mCameraState = CAMERA_STATE.eAngle;
-						}
-					}*/
-				}
-				
-				if (mCameraState == CAMERA_STATE.eZooming)
+				GMath.LinePointSide side1 = GMath.CheckLinePointSide(downPosition_touch, downPosition2_touch, newPos1);
+				GMath.LinePointSide side2 = GMath.CheckLinePointSide(downPosition_touch, downPosition2_touch, newPos2);
+
+				float point_distance = Mathf.Abs((newPos1 - downPosition_touch).y + (newPos2 - downPosition2_touch).y)/Screen.height/2f;
+
+				// float distance_x = Mathf.Abs(Mathf.Abs((downPosition_touch - downPosition2_touch).x) - Mathf.Abs((newPos1 - newPos2).x))/Screen.width;
+				float distance_x = ((downPosition_touch - downPosition2_touch).magnitude - (newPos1 - newPos2).magnitude)/Screen.width;
+
+				Vector3 tmpv1 = downPosition_touch - downPosition2_touch;
+				Vector3 tmpv2 = newPos1 - newPos2;
+				float tmp_detail_angle = Vector3.SignedAngle(tmpv1, tmpv2, Vector2.right);
+
+				// Debug.Log("distance_x " + distance_x + " distance_y " + distance_y
+				// 	+ " point_distance " + point_distance + " mCameraState " + mCameraState);
+
+				if(( point_distance > 0.1f && mCameraState == CAMERA_STATE.eIdle && side1 != GMath.LinePointSide.ON_LINE && side1 == side2)
+					|| mCameraState == CAMERA_STATE.eAngle)
 				{
-					if (Mathf.Abs(deltaY_touch) > iPhoneZoomDeltaValue)
-					{
-						float dy = -Mathf.Sign(deltaY_touch);
-						oldDistance_touch = newDistance_touch;
-						bCamera.Zoom(dy);
-					}
-					else
-					{
-						bCamera.Zoom(0);
-					}
+					mCameraState = CAMERA_STATE.eAngle;
+					float detail_distance = (detailPosition_touch.y + detailPosition2_touch.y)/2f;
+					// Debug.Log("detail_distance " + detail_distance);
+					bCamera.RotateX(detail_distance * Time.unscaledDeltaTime);
 				}
-				else if (mCameraState == CAMERA_STATE.eRotating)
+				else if(((tmp_detail_angle > 3f || Mathf.Abs(distance_x) > 0.06f) && mCameraState == CAMERA_STATE.eIdle)
+					|| (mCameraState == CAMERA_STATE.eRotating))
 				{
-					// DebugUtils.LogTouch("rotate "+touch2FingerDeltaAngle);
-					bCamera.Rotate(touch2FingerDeltaAngle, false);
-					//bCamera.Rotate(touch2FingerDeltaX_touch / ScreenWrapper.width, 0);
+					mCameraState = CAMERA_STATE.eRotating;
+					float detail_x = ((prePosition_touch - prePosition2_touch).magnitude - (newPos1 - newPos2).magnitude)/Screen.width;
+					// float detail_x = distance_x * 1f;
+					
+					Vector3 v1 = prePosition_touch - prePosition2_touch;
+					Vector3 v2 = newPos1 - newPos2;
+					float detail_angle = Vector3.SignedAngle(v1, v2, Vector2.right);
+					float cross_product = GMath.LineCrossProduct(v1,v2);
+					if (cross_product < 0)
+					{
+						detail_angle *= -1f;
+					}
+					// Debug.Log("detail_x " + detail_x);
+					// Debug.Log("detail_angle " + detail_angle);
+					bCamera.RotateY(detail_angle * Time.unscaledDeltaTime * 50f);
+					bCamera.ZoomEx(detail_x * Time.unscaledDeltaTime * 3500f);
 				}
-				//else if (mCameraState == CAMERA_STATE.eAngle)
-				//{
-				//	bCamera.Rotate(0, touch2FingerDeltaY_touch/ ScreenWrapper.height);
-				//}
-				
 			}	
 #endif		
-			// rotate to default rotation
-			else if (touch2FingerReleased && mCameraState == CAMERA_STATE.eIdle )
-			{
-				bCamera.RotateBack();
-			}
+			// // rotate to default rotation
+			// else if ((touch2FingerReleased) && mCameraState == CAMERA_STATE.eIdle )
+			// {
+			// 	bCamera.RotateBack();
+			// }
 			// no input and move
+			else if(touch2FingerReleased)
+			{	
+				bCamera.FinishFinger2Touch();
+				//bCamera.SmoothStop();
+			}
+			else if(isReleased)
+			{
+				bCamera.FinishMove();
+			}
 			else if (!isPressed && !isDown && !touch2Finger)
 			{
-				//DebugUtils.Log("SmoothStop ");
-				bCamera.SmoothStop();
-				
 				//hasInput = false;
 			}
 		}
@@ -1240,27 +1086,65 @@ public class Input3DController : MonoBehaviour
 		}
 	}
 
+	// void ControlBuilding()
+	// {
+	// 	BuildingManager.instance.InputControlBuilding(isDown, isPressed, isReleased, touchMoveAway,
+	// 		downPosition, currentPosition, releasePosition);
+	// }
+ //    GameObject building = null;
+ //    void ControlBuildingConstruction()
+	// {
+ //        if (isDown)
+	// 	{
+ //            building = RaycastUtil.instance.GetHitInfoInLay<GameObject>(downPosition, "Building");
+ //        }
+	// 	else if (isPressed && touchMoveAway)
+	// 	{
+ //            Vector3 worldPos = RaycastUtil.instance.GetHitInfoInLay<Vector3>(currentPosition, "Terrain");
+ //            worldPos.y = 0;
 
-	void ControlGame()
-	{
-		if (isDown)
-		{
-			//
-		}
-		else if (isPressed)
-		{
-			//
-		}
-		// when release touch, change the UI
-		else if (isReleased || touch2Finger)
-		{
-			//
-		}
-		else if (isReleased && !touchMoveAway)
-		{
-			//
-		}
-	}
+ //            if (building != null)
+ //            {
+ //                building.GetComponent<BuildingConstructor>().UpdateBuilding(isDown, isPressed,
+ //                    isReleased, touch2Finger, touchMoveAway, worldPos);
+ //            }
+ //        }
+	// 	if (isReleased && !touchMoveAway)
+	// 	{
+ //            if (building != null)
+ //            {
+ //                Vector3 worldPos = RaycastUtil.instance.GetHitInfoInLay<Vector3>(currentPosition, "Terrain");
+ //                building.GetComponent<BuildingConstructor>().UpdateBuilding(isDown, isPressed,
+ //                    isReleased, touch2Finger, touchMoveAway, releasePosition);
+ //            }
+ //            else if(!RaycastUtil.instance.HitObjectInLay(releasePosition, "Road"))
+ //            {
+ //                //Ö÷½¨Öþ½¨ÔìUI
+ //                UILoadBuilding loading_building = MenuManager.instance.CreateMenu<UILoadBuilding>();
+ //                loading_building.ChangePanelPosition(releasePosition);
+ //                if (!loading_building.IsShow)
+ //                {
+ //                    loading_building.OpenScreen();
+ //                    //ÕÒµ½ÆäËûUI²¢ÇÒ¹Øµô
+ //                    UIBuildingUpgrate loading_buildingUpgrate =  MenuManager.instance.FindMenu<UIBuildingUpgrate>();
+ //                    if(loading_buildingUpgrate != null)
+ //                    {
+ //                        loading_buildingUpgrate.CloseScreen();
+ //                    }
+ //                }
+ //                else
+ //                {
+ //                    loading_building.CloseScreen();
+ //                }
+ //            }   
+ //        }
+	// }
+
+	// void ControlBuildRoadConstruction()
+	// {
+	// 	RoadManager.instance.InputControlRoad(isDown,isPressed,isReleased,touchMoveAway,downPosition,currentPosition,releasePosition);
+		
+	// }
 
 	float SignAngle (Vector3 start, Vector3 end)
 	{	
