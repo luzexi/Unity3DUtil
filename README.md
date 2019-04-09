@@ -11,6 +11,14 @@ Unity3D Util library
 
 batchRender : 实时动态合并模型Mesh
 
+Editor : 编辑工具
+
+		ClearMissComponent.cs : 清除丢失的脚本
+
+		FindMissComponent.cs : 找到丢失的脚本
+
+		RemoveDebugLog.cs : 移除Debug.Log打印日志语句
+
 MeshGenerte : 程序Mesh构建
 
 		UILineMesh.cs : UI 连续线条mesh构建
