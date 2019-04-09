@@ -7,7 +7,7 @@ using System;
 public class DictionaryStr<T> : DictionarySort<string, T>
 {
 	//compare function
-	protected override int CompareFunction(string _a, string _b)
+	protected override int CompareFunction(string _a, string _b, params object[] args)
 	{
 		return _a.CompareTo(_b);
 	}

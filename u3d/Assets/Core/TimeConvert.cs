@@ -1,10 +1,20 @@
 
 using System;
+using UnityEngine;
 
 
 //time convert
 public class TimeConvert
 {
+    public const long TICKS_TO_SECOND = 10000000L;
+    public static long sSeverTime = 0;
+    public static float sServerStartTime = 0;
+
+    public static long GetSeverTime()
+    {
+        return sSeverTime + (long)((Time.realtimeSinceStartup - sServerStartTime)*1000f);
+    }
+
 	//convert from unix time to string date time
     public static string UNIXTimeToDateTimeString(long time)
     {

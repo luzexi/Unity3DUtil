@@ -112,7 +112,7 @@ public class DictionarySort<K,T>
 	}
 
 	//compare function
-	protected virtual int CompareFunction(K _a, K _b)
+	protected virtual int CompareFunction(K _a, K _b, params object[] args)
 	{
 		return 0;
 	}

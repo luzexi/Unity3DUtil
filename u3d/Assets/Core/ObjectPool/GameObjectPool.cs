@@ -3,38 +3,53 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public static class GameObjectPool
+public class GameObjectPool<T>
+    where T : MonoBehaviour
 {
     // Object pool to avoid allocations.
-    private static readonly ObjectPool<GameObject> sGameObjectPool = new ObjectPool<GameObject>(OnGet,OnRelease);
-    private static GameObject sRoot = null;
+    protected ObjectPool<T> sGameObjectPool = new ObjectPool<T>(OnGet, OnRelease);
+    protected GameObject sRoot = null;
 
-    public static GameObject Get()
+    public GameObjectPool()
     {
-        GameObject obj = sGameObjectPool.Get();
+        SetCreateFunction(GenerateAsset);
+    }
+
+    public T Get()
+    {
+        T obj = sGameObjectPool.Get();
         obj.transform.parent = null;
         return obj;
     }
 
-    public static void Release(GameObject toRelease)
+    public void Release(T toRelease)
     {
         if(sRoot == null)
         {
-            sRoot = new GameObject("GameObjectPool");
-            GameObject.DontDestroyOnLoad(sRoot);
+            sRoot = new GameObject("GameObjPool-" + this.GetType().ToString());
         }
         toRelease.transform.parent = sRoot.transform;
         sGameObjectPool.Release(toRelease);
     }
 
-    private static void OnGet(GameObject obj)
+    protected virtual T GenerateAsset()
     {
-        obj.SetActive(true);
+        return default(T);
     }
 
-    public static void OnRelease(GameObject obj)
+    protected void SetCreateFunction(ObjectPool<T>.CreateT _create_function)
     {
-        obj.SetActive(false);
+        sGameObjectPool.m_ActionOnCreate = _create_function;
+    }
+
+    private static void OnGet(T obj)
+    {
+        obj.gameObject.SetActive(true);
+    }
+
+    public static void OnRelease(T obj)
+    {
+        obj.gameObject.SetActive(false);
     }
 }
 

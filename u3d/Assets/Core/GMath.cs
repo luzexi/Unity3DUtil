@@ -3,8 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using EPPZ.Geometry;
+using EPPZ.Geometry.Model;
+
 // graphic math
-public class GMath {
+public class GMath
+{
     // the side of line for point
     public enum LinePointSide {
         ON_LINE = 0,
@@ -74,8 +78,8 @@ public class GMath {
     }
 
     static private bool IsRectCollideSAT (Vector2[] rect1, Vector2[] rect2) {
-        // Debug.Assert (rect1.Length == 4, "rect1's point num is wrong");
-        // Debug.Assert (rect2.Length == 4, "rect2's point num is wrong");
+        Debug.Assert (rect1.Length == 4, "rect1's point num is wrong");
+        Debug.Assert (rect2.Length == 4, "rect2's point num is wrong");
 
         //旋转轴
         Vector2[] axises = new Vector2[2];
@@ -135,25 +139,25 @@ public class GMath {
 
     /////////////////////////
 
-    // //polygon union
-    // static public List<Vector2> PolygonUnion (List<Vector2> _polygon1, Vector2[] _polygon) {
-    //     List<Vector2> _polygon2 = new List<Vector2> (_polygon);
+    //polygon union
+    static public List<Vector2> PolygonUnion (List<Vector2> _polygon1, Vector2[] _polygon) {
+        List<Vector2> _polygon2 = new List<Vector2> (_polygon);
 
-    //     if (_polygon1 == null) return _polygon2;
-    //     if (_polygon1.Count == 0) return _polygon2;
+        if (_polygon1 == null) return _polygon2;
+        if (_polygon1.Count == 0) return _polygon2;
 
-    //     // List<Vector2> result = new List<Vector2>();
+        // List<Vector2> result = new List<Vector2>();
 
-    //     // _polygon1.AddRange(polygon2);
-    //     // return _polygon1;
-    //     // return result;
-    //     EPPZ.Geometry.Model.Polygon polygon1 = EPPZ.Geometry.Model.Polygon.PolygonWithPointList (_polygon1);
-    //     EPPZ.Geometry.Model.Polygon polygon2 = EPPZ.Geometry.Model.Polygon.PolygonWithPointList (_polygon2);
-    //     polygon1.AddPolygon (polygon2);
-    //     EPPZ.Geometry.Model.Polygon polygon_union = polygon1.UnionPolygon ();
+        // _polygon1.AddRange(polygon2);
+        // return _polygon1;
+        // return result;
+        EPPZ.Geometry.Model.Polygon polygon1 = EPPZ.Geometry.Model.Polygon.PolygonWithPointList (_polygon1);
+        EPPZ.Geometry.Model.Polygon polygon2 = EPPZ.Geometry.Model.Polygon.PolygonWithPointList (_polygon2);
+        polygon1.AddPolygon (polygon2);
+        EPPZ.Geometry.Model.Polygon polygon_union = polygon1.UnionPolygon ();
 
-    //     return new List<Vector2> (polygon_union.points);
-    // }
+        return new List<Vector2> (polygon_union.points);
+    }
 
     ///////////////////////////
 
@@ -224,7 +228,7 @@ public class GMath {
         CQuickSort.Sort<Vector2> (vex, 1, vex.Count - 1, ConvexCompare2);
     }
 
-    static int CWCompare (Vector2 a, Vector2 b) {
+    static int CWCompare (Vector2 a, Vector2 b, params object[] args) {
         float res = Mathf.Atan2 (b.y - _TempConvexFirst.y, b.x - _TempConvexFirst.x) - Mathf.Atan2 (a.y - _TempConvexFirst.y, a.x - _TempConvexFirst.x);
         if (IsEqualZero (res)) {
             float tmp = a.x - b.x;
@@ -286,7 +290,7 @@ public class GMath {
         return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
     }
 
-    static int ConvexCompare1 (Vector2 a, Vector2 b) {
+    static int ConvexCompare1 (Vector2 a, Vector2 b, params object[] args) {
         if (IsEqualZero (a.y - b.y)) {
             float tmp = a.x - b.x;
             if (IsEqualZero (tmp)) return 0;
@@ -300,7 +304,7 @@ public class GMath {
         }
     }
 
-    static int ConvexCompare2 (Vector2 a, Vector2 b) {
+    static int ConvexCompare2 (Vector2 a, Vector2 b, params object[] args) {
         float res = Mathf.Atan2 (a.y - _TempConvexFirst.y, a.x - _TempConvexFirst.x) - Mathf.Atan2 (b.y - _TempConvexFirst.y, b.x - _TempConvexFirst.x);
         if (IsEqualZero (res)) {
             float tmp = a.x - b.x;
@@ -337,59 +341,10 @@ public class GMath {
         return Mathf.Abs (vec1.x - vec2.x) + Mathf.Abs (vec1.y - vec2.y);
     }
 
-    //计算交点,需要有误差允许
-    public static bool Intersection(Vector2 a, Vector2 b, Vector2 c, Vector2 d,out Vector2 result) {
-        float epsilon = 0.01f;
-
-        // 三角形abc 面积的2倍  
-        var area_abc = (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x);
-        if(Mathf.Abs(area_abc) <= epsilon)  //c在ab上，允许有误差
-        {
-            result = c;
-            return true;
-        }
-        // 三角形abd 面积的2倍  
-        var area_abd = (a.x - d.x) * (b.y - d.y) - (a.y - d.y) * (b.x - d.x);
-        if(Mathf.Abs(area_abd) <= epsilon)  //d在ab上，允许有误差
-        {
-            result = d;
-            return true;
-        }
-
-        // 三角形cda 面积的2倍  
-        var area_cda = (c.x - a.x) * (d.y - a.y) - (c.y - a.y) * (d.x - a.x);
-        if(Mathf.Abs(area_cda) <= epsilon)   //a在cd上，允许有误差
-        {
-            result = a;
-            return true;
-        }
-        // 三角形cdb 面积的2倍  
-        var area_cdb = area_cda + area_abc - area_abd;
-        if(Mathf.Abs(area_cdb) <= epsilon)    //b在cd上，允许有误差
-        {
-            result = b;
-            return true;
-        }
-
-        // 面积符号相同则两点在线段同侧,不相交
-        if (area_abc * area_abd > 0) 
-        {
-            result = Vector2.zero;
-            return false;
-        }
-
-        if (area_cda * area_cdb > 0) 
-        {
-            result = Vector2.zero;
-            return false;
-        }
-
-        //计算交点坐标  
-        var t = area_cda / (area_abd - area_abc);
-        var dx = t * (b.x - a.x);
-        var dy = t * (b.y - a.y);
-        result = new Vector2 (a.x + dx, a.y + dy);
-        return true;
+    public static bool IsCollinear(Vector2 p1,Vector2 p2,Vector2 p3)
+    {
+        float result = (p3.y-p1.y)*(p2.x-p1.x)-(p2.y-p1.y)*(p3.x-p1.x);
+        return IsEqualZero(result);
     }
 
     //获取point点到线段上最近的点
@@ -448,85 +403,6 @@ public class GMath {
         return dis.sqrMagnitude;
     }
 
-    // //找最优的造路路径
-    // //现在已知存在的问题：
-    // //   1. 从次短边穿过的路无效，原因是根本没判断
-    // //   2. 生成两段直线后，靠近end的直线递归了，前一段没有，导致前一段可能穿过其他建筑
-    // //   3. 每段之间的连接点有问题，需要特殊处理
-    // public static void GetCanSitRoute(Vector2 _start,Vector2 _end,List<Vector2[]> buildingList, ref int index,ref List<Vector2> route)
-    // {
-    //     bool isCross;
-    //     Vector2 newStart = Vector2.zero;
-    //     Vector2[] rect;
-    //     Debug.Log("GetCanSitRoute:index:"+index);
-    //     for(int i = index;i<buildingList.Count;++i)
-    //     {
-    //         isCross = false;
-    //         rect = buildingList[i];
-    //         int closest1 = 0;
-    //         int closest2 = 0;
-    //         float minDis1 = -1f;
-    //         float minDis2 = -1f;
-    //         for(int v=0;v<4;++v)
-    //         {
-    //             float dis = Vector2.Distance(rect[v],_start);
-    //             if(minDis1 == -1)
-    //             {
-    //                 minDis1 = dis;
-    //                 closest1 = v;
-    //             }
-    //             else if(dis < minDis1)
-    //             {
-    //                 minDis2 = minDis1;
-    //                 closest2 = closest1;
-    //                 minDis1 = dis;
-    //                 closest1 = v;
-    //             }
-    //             else if(minDis2 == -1 || dis<minDis2)
-    //             {
-    //                 minDis2 = dis;
-    //                 closest2 = v;
-    //             }
-    //         }
-    //         if(GMath.CheckLineCross(_start,_end,rect[closest1],rect[closest2]))
-    //         {
-    //             isCross = true;
-    //             float project_left = Vector2.Dot(rect[closest1]-_start,_end-_start);
-    //             float project_right = Vector2.Dot(rect[closest2]-_start,_end-_start);
-
-    //             int newStartIndex = 0;
-    //             int newStart_left = 0;
-    //             int newStart_right = 0;
-    //             float ratio_left = 0.3f;
-    //             float ratio_right = 0.2f;
-
-    //             if(project_left>project_right)
-    //             {
-    //                 newStartIndex = closest1;
-    //                 newStart_left = closest2;
-    //                 newStart_right = (2*closest1 - closest2+4)%4;
-    //             }
-    //             else
-    //             {
-    //                 newStartIndex = closest2;
-    //                 newStart_left = closest1;
-    //                 newStart_right = (2*closest2 - closest1+4)%4;
-    //             }
-    //             Debug.Log("BuildingManager:236:"+newStart_right);
-    //             newStart = rect[newStartIndex] + (rect[newStartIndex] - rect[newStart_left]).normalized*ratio_left + (rect[newStartIndex] - rect[newStart_right]).normalized*ratio_right;
-    //         }
-
-    //         if(isCross)
-    //         {
-    //             route.Add(newStart);
-    //             //TODO: 选一个最近的点 Veritces[?]
-    //             index = i;
-    //             GetCanSitRoute(newStart,_end,buildingList,ref index,ref route);
-    //             break;
-    //         }
-    //     }
-    // }
-
 
     //3D -> 2D
     public static Vector2 PauseVec3ToVec2(Vector3 vec)
@@ -540,34 +416,34 @@ public class GMath {
         return new Vector3(vec.x,0,vec.y);
     }
 
-    // public static Vector3[] PausePathFromVec2ToVec3(List<Vector2> path)
-    // {
-    //     if(path == null)
-    //         return null;
+    public static Vector3[] PausePathFromVec2ToVec3(List<Vector2> path)
+    {
+        if(path == null)
+            return null;
 
-    //     Vector3[] result =new Vector3[path.Count];
-    //     RaycastHit hitInfo;
-    //     for(int i=0;i<path.Count;++i)
-    //     {
-    //         Vector2 pos = path[i];
-    //         //计算Y轴高度
-    //         Vector3 origin = new Vector3(pos.x,Consts.MAX_TERRAIN_HEIGHT,pos.y);
-    //         Physics.Raycast (origin, Vector3.down, out hitInfo, Mathf.Infinity, 1 << Consts.TERRAIN_LAYER);
-    //         result[i] = new Vector3(pos.x,hitInfo.point.y,pos.y);
-    //     }
-    //     return result;
-    // }
+        Vector3[] result =new Vector3[path.Count];
+        RaycastHit hitInfo;
+        for(int i=0;i<path.Count;++i)
+        {
+            Vector2 pos = path[i];
+            //计算Y轴高度
+            Vector3 origin = new Vector3(pos.x, 0xFFFF, pos.y);
+            Physics.Raycast (origin, Vector3.down, out hitInfo, Mathf.Infinity, 1 << 14);
+            result[i] = new Vector3(pos.x, hitInfo.point.y, pos.y);
+        }
+        return result;
+    }
 
-    // public static float CalculateTime(Vector3[] _path,float _speed)
-    // {
-    //     float length = 0f;
-    //     if(_path == null || _path.Length == 0 || _speed == 0f)
-    //         return 0f;
-    //     for(int i=1;i<_path.Length;++i)
-    //     {
-    //         length +=Vector2.Distance(_path[i-1].xz(),_path[i].xz());
-    //     }
-    //     return length/_speed;
-    // }
+    public static float CalculateTime(Vector3[] _path,float _speed)
+    {
+        float length = 0f;
+        if(_path == null || _path.Length == 0 || _speed == 0f)
+            return 0f;
+        for(int i=1;i<_path.Length;++i)
+        {
+            length +=Vector2.Distance(_path[i-1].xz(),_path[i].xz());
+        }
+        return length/_speed;
+    }
 
 }

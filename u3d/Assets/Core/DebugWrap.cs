@@ -45,10 +45,40 @@ public static class Debug
 
 	//it will be crash when the log is too much.
 #if UNITY_EDITOR 
-	private static int MaxMessageLength = 1000000; 
+	private static int MaxMessageLength = 10000;
 #else 
 	private static int MaxMessageLength = 1000; 
 #endif
+
+	public static void Assert(bool condition)
+	{
+		UnityEngine.Debug.Assert(condition);
+	}
+
+	public static void Assert(bool condition, Object context)
+	{
+		UnityEngine.Debug.Assert(condition, context);
+	}
+
+	public static void Assert(bool condition, object message)
+	{
+		UnityEngine.Debug.Assert(condition, message);
+	}
+
+	public static void LogAssertion(object message)
+	{
+		UnityEngine.Debug.LogAssertion(message);
+	}
+
+	public static void LogFormat(string format, params object[] args)
+	{
+		UnityEngine.Debug.LogFormat(format, args);
+	}
+
+	public static void LogFormat(Object context, string format, params object[] args)
+	{
+		UnityEngine.Debug.LogFormat(context, format, args);
+	}
 
 	public static void Log(object message)
 	{
@@ -99,6 +129,16 @@ public static class Debug
 			UnityEngine.Debug.LogWarning(m.Substring(startIndex, length), context);
 		}
 	}
+
+	public static void LogWarningFormat(string format, params object[] args)
+	{
+		UnityEngine.Debug.LogWarningFormat(format, args);
+	}
+
+	public static void LogWarningFormat(Object context, string format, params object[] args)
+	{
+		UnityEngine.Debug.LogWarningFormat(context, format, args);
+	}
 	
 	public static void LogError(object message)
 	{
@@ -109,16 +149,17 @@ public static class Debug
 			var length = Mathf.Min(MaxMessageLength, m.Length - startIndex);
 			if (length <= 0)
 				break;
-#if !DISABLE_DEBUG_ERROR
+// #if !DISABLE_DEBUG_ERROR
 			UnityEngine.Debug.LogError(m.Substring(startIndex, length));
-#else
-			UnityEngine.Debug.Log(m.Substring(startIndex, length));
-#endif
+// #else
+// 			UnityEngine.Debug.Log(m.Substring(startIndex, length));
+// #endif
 		}
 	}
 	public static void LogError(object message, Object context)
 	{
-		var m = message.ToString();
+        return;
+        var m = message.ToString();
 		for(int i=0;;++i)
 		{
 			var startIndex = i * MaxMessageLength;
@@ -131,6 +172,16 @@ public static class Debug
 			UnityEngine.Debug.Log(m.Substring(startIndex, length));
 #endif
 		}
+	}
+
+	public static void LogErrorFormat(string format, params object[] args)
+	{
+		UnityEngine.Debug.LogErrorFormat(format, args);
+	}
+
+	public static void LogErrorFormat(Object context, string format, params object[] args)
+	{
+		UnityEngine.Debug.LogErrorFormat(context, format, args);
 	}
 
 	public static void LogException(System.Exception exception)
@@ -210,14 +261,25 @@ public static class Debug
 			return false;
 		}
 	}
+
+	public static void Assert(bool condition){}
+	public static void Assert(bool condition, Object context){}
+	public static void Assert(bool condition, object message){}
+	public static void LogAssertion(object message){}
+	public static void LogFormat(string format, params object[] args){}
+	public static void LogFormat(Object context, string format, params object[] args){}
 	public static void Log(object message) {}
 	public static void Log(object message, Object context) {}
 	
 	public static void LogWarning(object message) {}
 	public static void LogWarning(object message, Object context) {}
+	public static void LogWarningFormat(string format, params object[] args){}
+	public static void LogWarningFormat(Object context, string format, params object[] args){}
 	
 	public static void LogError(object message) {}
 	public static void LogError(object message, Object context) {}
+	public static void LogErrorFormat(string format, params object[] args){}
+	public static void LogErrorFormat(Object context, string format, params object[] args){}
 
 	public static void LogException(System.Exception message) {}
 	public static void LogException(System.Exception message, Object context) {}

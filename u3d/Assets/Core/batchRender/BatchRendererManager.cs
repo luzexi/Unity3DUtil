@@ -18,6 +18,12 @@ public class BatchRendererManager : MonoBehaviour
         }
     }
 
+    public void Reset()
+    {
+        GameObject.Destroy(sInstance.gameObject);
+        sInstance = null;
+    }
+
     class _Batch
     {
         BatchRendererManager m_manager;
@@ -26,14 +32,14 @@ public class BatchRendererManager : MonoBehaviour
         MeshFilter m_meshFilter = null;
         MeshRenderer m_meshRenderer = null;
         int m_stablePeriod = 1;
-		int m_VertexCount = 0;
+        int m_VertexCount = 0;
         enum Status
         {
             Unstable,
             Stable,
         }
         GameStateMachine<Status> m_sm = new GameStateMachine<Status>();
-		public int VertexCount  { get {return m_VertexCount;} }
+        public int VertexCount  { get {return m_VertexCount;} }
         public _Batch(BatchRendererManager _manager)
         {
             m_manager = _manager;
@@ -59,21 +65,21 @@ public class BatchRendererManager : MonoBehaviour
         public void AddUnit(BatchRenderer _unit)
         {
             m_units.Add(_unit);
-			m_VertexCount += _unit.m_meshFilter.sharedMesh.vertexCount;
+            m_VertexCount += _unit.m_meshFilter.sharedMesh.vertexCount;
             m_sm.ChangeState(Status.Unstable);
         }
         public bool RemoveUnit(BatchRenderer _unit)
         {
             if (m_units.Remove(_unit))
             {
-				m_VertexCount -= _unit.m_meshFilter.sharedMesh.vertexCount;
+                m_VertexCount -= _unit.m_meshFilter.sharedMesh.vertexCount;
                 if (m_stablePeriod > 0 &&_unit.m_stablePeriod > 0 && _unit.m_meshRenderer != null)
                     _unit.m_meshRenderer.enabled = true;
                 m_sm.ChangeState(Status.Unstable);
 
-				return true;
+                return true;
             }
-			return false;
+            return false;
         }
         public void Update()
         {
@@ -129,6 +135,8 @@ public class BatchRendererManager : MonoBehaviour
                 //}
                 if (m_meshFilter.sharedMesh == null)
                     m_meshFilter.sharedMesh = new Mesh();
+                // Debug.Log("combine mesh m_VertexCount " + m_VertexCount);
+                // Debug.Log("combine mesh m_units.Count " + m_units.Count);
                 m_meshFilter.sharedMesh.CombineMeshes(combine);
                 m_meshRenderer.enabled = true;
             }
@@ -170,7 +178,8 @@ public class BatchRendererManager : MonoBehaviour
             public override void Update()
             {
                 ++m_count;
-                if (m_count >= m_batch.m_stablePeriod)
+                // if (m_count >= m_batch.m_stablePeriod)
+                if (m_count >= 1)
                 {
                     m_fsm.ChangeState(Status.Stable);
                 }
@@ -194,7 +203,7 @@ public class BatchRendererManager : MonoBehaviour
         }
 
     }
-	Dictionary<string, List<_Batch> > m_materialTable = new Dictionary<string, List<_Batch> >();
+    Dictionary<string, List<_Batch> > m_materialTable = new Dictionary<string, List<_Batch> >();
 
     void Start()
     {
@@ -205,8 +214,8 @@ public class BatchRendererManager : MonoBehaviour
     {
         foreach (var pair in m_materialTable)
         {
-			foreach (_Batch b in pair.Value)
-				b.Update();
+            foreach (_Batch b in pair.Value)
+                b.Update();
             //if (pair.Key.name.ToLower().Contains("training_com"))
             //{
             //    Debug.Log("----------------------" + pair.Key.name);
@@ -218,15 +227,16 @@ public class BatchRendererManager : MonoBehaviour
     {
         BatchRenderer u = _batchRenderer;
         
-		_Batch batch;
-		List<_Batch> batchList;
-		if (m_materialTable.TryGetValue(u.m_meshRenderer.sharedMaterial.name, out batchList))
+        _Batch batch;
+        List<_Batch> batchList;
+        if (m_materialTable.TryGetValue(u.m_meshRenderer.sharedMaterial.name, out batchList))
         {
-			int i = batchList.Count - 1;
+            int i = batchList.Count - 1;
             while (i >= 0)
             {
                 batch = batchList[i];
-				if (batch.VertexCount + _batchRenderer.m_meshFilter.sharedMesh.vertexCount < ushort.MaxValue)
+                if (batch.VertexCount + _batchRenderer.m_meshFilter.sharedMesh.vertexCount < ushort.MaxValue
+                    && batch.UnitCount() < short.MaxValue)
                 {
                     batch.AddUnit(u);
                     break;
@@ -235,7 +245,7 @@ public class BatchRendererManager : MonoBehaviour
             }
             if (i < 0) // all full, need a new batch
             {
-				batch = new _Batch(this, _stablePeriod);
+                batch = new _Batch(this, _stablePeriod);
                 batch.AddUnit(_batchRenderer);
                 batchList.Add(batch);
             }
@@ -244,16 +254,16 @@ public class BatchRendererManager : MonoBehaviour
         {
             batch = new _Batch(this, _stablePeriod);
             batch.AddUnit(u);
-			batchList = new List<_Batch>();
-			batchList.Add(batch);
-			m_materialTable.Add(u.m_meshRenderer.sharedMaterial.name, batchList);
+            batchList = new List<_Batch>();
+            batchList.Add(batch);
+            m_materialTable.Add(u.m_meshRenderer.sharedMaterial.name, batchList);
         }
     }
 
     public void RemoveRenderer(BatchRenderer _batchRenderer)
     {  
         List<string> toBeRemoved = new List<string>();
-		foreach (var pair in m_materialTable)
+        foreach (var pair in m_materialTable)
         {
             List<_Batch> batchList = pair.Value;
             for (int i = 0 ; i < batchList.Count; i++)
@@ -288,9 +298,9 @@ public class BatchRendererManager : MonoBehaviour
     {
         foreach (var pair in m_materialTable)
         {
-			foreach (_Batch b in pair.Value)
+            foreach (_Batch b in pair.Value)
             {
-				b.Ungroup();
+                b.Ungroup();
             }
             // pair.Value.Group();
         }
@@ -300,9 +310,9 @@ public class BatchRendererManager : MonoBehaviour
     {
         foreach (var pair in m_materialTable)
         {
-			foreach (_Batch b in pair.Value)
+            foreach (_Batch b in pair.Value)
             {
-				b.Group();
+                b.Group();
             }
             // pair.Value.Group();
         }

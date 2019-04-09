@@ -8,7 +8,7 @@ using System;
 public class DictionaryInt<T> : DictionarySort<int,T>
 {
 	//compare function
-	protected override int CompareFunction(int _a, int _b)
+	protected override int CompareFunction(int _a, int _b, params object[] args)
 	{
 		return _a - _b;
 	}

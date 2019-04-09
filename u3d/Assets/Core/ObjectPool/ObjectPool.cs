@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using UnityEngine.Events;
 
 
-public class ObjectPool<T> where T : new()
+public class ObjectPool<T>
 {
     private readonly Stack<T> m_Stack = new Stack<T>();
     private readonly UnityAction<T> m_ActionOnGet;
     private readonly UnityAction<T> m_ActionOnRelease;
+    public delegate T CreateT();
+    public CreateT m_ActionOnCreate;
 
     public int countAll { get; private set; }
     public int countActive { get { return countAll - countInactive; } }
@@ -20,10 +22,13 @@ public class ObjectPool<T> where T : new()
 
     public T Get()
     {
-        T element;
+        T element = default(T);
         if (m_Stack.Count == 0)
         {
-            element = new T();
+            if(m_ActionOnCreate != null)
+            {
+                element = m_ActionOnCreate();
+            }
             countAll++;
         }
         else
