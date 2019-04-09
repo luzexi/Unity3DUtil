@@ -19,6 +19,12 @@ MeshGenerte : 程序Mesh构建
 
 ObjectPool : 对象池
 
+		GameObjectPool.cs : GameObject对象池
+
+		ListPool.cs : 列表对象池
+
+		ObjectPool.cs : 对象池基类
+
 pathFinder : A星寻路算法
 
 sort : 排序算法
@@ -39,19 +45,31 @@ CPropertyValue : 解决精度问题，未完成
 
 CRandom.cs : 在做老虎机游戏时写的赌博概率随机
 
-CSingleton.cs : 单例
+CSingleton.cs : 单例，以及清空所有单例的接口类
 
-CSingletonMono.cs : Mono单例
+CSingletonMono.cs : Mono单例，以及清空所有单例的接口类
 
 DebugWrap.cs : Debug封装
 
 GameStateMachine.cs : 状态机封装
 
-GMath.cs : Graphic math 图形学计算
+GMath.cs : Graphic math 图形学计算工具
 
 LineMesh.cs : 画线工具
 
 MiniJSON.cs : 常用Json解析类
+
+MixUtils.cs : 常用零散的方法
+
+		getDeviceUniqueId()，获取设备唯一ID
+
+		GetAndroidContext()，获取安卓当前运行窗口
+
+		GetSavePath()，获取有写入权限的文件夹地址
+
+		GetString()，通过二进制获取字符串
+
+		GetMd5Hash()，MD5某个字符串或二进制数据
 
 Polar.cs : 球面曲线运动轨迹
 
@@ -65,14 +83,4 @@ TextureTileAnimationWholeMesh.cs : 利用图集排列的贴图精灵动画
 
 TimeConvert.cs : 时间转换
 
-MixUtils.cs : 常用零散的方法
-
-		getDeviceUniqueId()，获取设备唯一ID
-
-		GetAndroidContext()，获取安卓当前运行窗口
-
-		GetSavePath()，获取有写入权限的文件夹地址
-
-		GetString()，通过二进制获取字符串
-
-		GetMd5Hash()，MD5某个字符串或二进制数据
+Vector3_Extensions.cs : Vector3的扩展

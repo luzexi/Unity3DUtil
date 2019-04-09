@@ -146,6 +146,7 @@ public class GameStateMachine<T> where T : struct
         if (!m_stateList.ContainsKey(newStateName))
         {
 #if UNITY_EDITOR
+            Debug.Log("Error! No State named :" +newStateName.ToString());
             throw new UnityException();
 #endif
             return;
@@ -173,9 +174,16 @@ public class GameStateMachine<T> where T : struct
         m_curState.EnterState();
     }
 
-    public T GetCurStateName()
+    public T GetCurrentStateName()
     {
         return m_curState.m_stateName;
+    }
+
+    public GameState GetCurrentState()
+    {
+        if(m_curState == null) return null;
+        
+        return m_stateList[m_curState.m_stateName];
     }
 
     public bool IsInState(GameState checkState)

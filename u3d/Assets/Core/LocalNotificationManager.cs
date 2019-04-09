@@ -23,12 +23,12 @@ public class LocalNotificationManager
 	
 	public void Init()
 	{
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
 		AndroidJNI.AttachCurrentThread();
 #endif
 	}
 	
-	public void AddNotification(float _delayTime, string _content)
+	public void AddNotification(float _delayTime, string _content, string title = null)
 	{
         if (!Enabled) return;
 		Debug.Log("Add Local Notify "+"delay: "+(_delayTime).ToString()+". content: "+_content);
@@ -47,8 +47,14 @@ public class LocalNotificationManager
 			using (AndroidJavaObject obj_Activity = cls_UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
 			{
 				AndroidJavaClass cls_OpenNotificationAnd = new AndroidJavaClass("com.sd.glb.OpenNotification");
-				cls_OpenNotificationAnd.CallStatic("Init", obj_Activity);				
-				cls_OpenNotificationAnd.CallStatic("NotifyText", count++, time, _content);
+				if(title == null)
+				{
+					cls_OpenNotificationAnd.CallStatic("NotifyText",obj_Activity, time, _content);
+				}
+				else
+				{
+					cls_OpenNotificationAnd.CallStatic("NotifyText",obj_Activity, time, title, _content);
+				}
 			}
 		}
 #endif
